@@ -122,6 +122,7 @@ MOD_TO_SERVER = {
     "peers": {"me": F(str), "members": F(list)},
     # roads (roads.py; additive): the mod removed its roads (switched off and on again): send them again
     "roads_reset": {},
+    "road_geometry": {"version": F(int), "backend": F(str), "speed": F(NUM)},
     "map_tiles": {"tiles": F(list)},       # the world map's basemap tiles as files (settings.mapTiles)
     "geocode": {"id": F(int), "q": F(str), "lat": F(NUM, OPT), "lon": F(NUM, OPT)},   # the map's search box
     "route": {"id": F(int), "lat0": F(NUM), "lon0": F(NUM), "lat1": F(NUM), "lon1": F(NUM),
@@ -143,6 +144,7 @@ TERRAIN = {"cx": F(NUM), "cy": F(NUM), "heightmap": F(str), "size": F(int), "squ
            "base": F(str, OPT), "baseSize": F(NUM, OPT),           # --near-visual detail: the block's photo
            "ter": F(str, OPT)}                                     # the block as a .ter (swapped in, no import)
 SERVER_TO_MOD = {
+    "road_geometry_state": {"version": F(int), "backend": F(str), "epoch": F(int), "ok": F(bool), "error": F(str)},
     "server_list": {"servers": F(list, OPT), "error": F(str, OPT)},   # earthd.server_list (the list service)
     "geocode_result": {"id": F(int), "results": F(list), "error": F(str, OPT)},   # geocode.py (Photon)
     "route_result": {"id": F(int), "points": F(list), "dist": F(NUM), "dur": F(NUM), "error": F(str, OPT)},  # OSRM
@@ -155,6 +157,7 @@ SERVER_TO_MOD = {
     "place_previews_ready": {"keys": F(list)},
     "map_tiles_ready": {"tiles": F(list)},  # [z, x, y, ok, layer] each: written to <user>/temp/beamngEarth/maptiles
     "hello": {"protocol": F(int), "format": F(int), "serverVersion": F(str), "appVersion": F(str), "sessionId": F(str),
+              "roadGeometry": F(dict, OPT),
               "farFormat": F(str), "material": F(str),
               "nearVisual": F(str), "attribution": F(str),          # protocol 4
               "cells": F(int, OPT),             # v1.4 M1: cells per tile edge, FORMAT 4 only
@@ -213,12 +216,14 @@ SERVER_TO_MOD = {
     # data credits for the tiles around the player (credits.py; additive, protocol 4, --credits on)
     "credits": {"v": F(int), "near": F(str), "far": F(str), "ids": F(list), "farIds": F(list)},
     # the loading line's counts (Connection.send_progress, the mod's loadprogress.lua): [done, wanted] each
-    "load_progress": {"anchorId": F(int), "ground": F(list), "roads": F(list), "trees": F(list), "far": F(list)},
+    "load_progress": {"anchorId": F(int), "ground": F(list), "roads": F(list), "trees": F(list), "far": F(list),
+                      "roadGeometry": F(dict, OPT)},
     # road tiles near the player (roads.py; additive, with map data only): a JSON file of DecalRoad chunks
     "roads_tile": {"anchorId": F(int), "key": F(str), "path": F(str), "n": F(int),
+                   "roadBackend": F(str, OPT), "roadEpoch": F(int, OPT),
                    "data": F(dict, OPT),       # the file's JSON, so the game need not open it (staging.inline_json)
                    "slots": F(dict, OPT)},     # {what: [pooled shape path, serial]} (matslots.py; pose.slotsGone)
-    "roads_drop": {"anchorId": F(int), "key": F(str)},
+    "roads_drop": {"anchorId": F(int), "key": F(str), "roadBackend": F(str, OPT), "roadEpoch": F(int, OPT)},
     # trees, bushes and rocks of a tile (vegetation.py, --trees on): a JSON file of items
     "veg_tile": {"anchorId": F(int), "key": F(str), "path": F(str), "n": F(int), "data": F(dict, OPT)},
     "veg_drop": {"anchorId": F(int), "key": F(str)},
@@ -239,7 +244,7 @@ SERVER_TO_MOD = {
 WEATHER_NESTED = {"cover": {"total", "low", "mid", "high"}, "wind": {"ms", "fromDeg", "gustMs"},
                   "aloft": {"ms", "fromDeg"}}
 # message types the plain session cannot produce (each has its own session test below)
-EXERCISED_ELSEWHERE = {"far_retex", "roads_tile", "roads_drop",   # roads: needs map data (roads tests)
+EXERCISED_ELSEWHERE = {"far_retex", "roads_tile", "roads_drop", "road_geometry_state",  # test_roadgeom_ext
                        "terrain_refresh",                            # a provisional first block: --grading (map data)
                        "update_status",                              # the player's "Update now" (test_selfupdate)
                        "where_result",                               # the status bar: asked by the mod while driving
@@ -301,7 +306,7 @@ def mod_sends():
     net.send)."""
     out = {}
     for names, pattern in ((("core.lua", "places.lua", "mpsession.lua", "serverlist.lua"), r"net(?:'\))?\.send\(\{"),
-                           (("terrainpatch.lua",), r"\bsend\(\{")):
+                           (("terrainpatch.lua", "roadgeom.lua"), r"\bsend\(\{")):
         text = "\n".join((LUA / n).read_text(encoding="utf-8") for n in names)
         for m in re.finditer(pattern, text):
             t = lua_tables(text, m.end() - 1)
@@ -314,7 +319,7 @@ def mod_sends():
 def mod_reads():
     """Fields the mod reads from server messages: msg.X / p.msg.X / tr.X (terrain) in its Lua."""
     out = set()
-    for name in ("core.lua", "farfield.lua", "lattice.lua", "weather.lua", "credits.lua", "roads.lua", "mpsession.lua"):
+    for name in ("core.lua", "farfield.lua", "lattice.lua", "weather.lua", "credits.lua", "roads.lua", "mpsession.lua", "roadgeom.lua"):
         text = (LUA / name).read_text(encoding="utf-8")
         out |= set(re.findall(r"\bmsg\.(\w+)", text))
         out |= {"terrain." + f for f in re.findall(r"\btr\.(\w+)", text)}

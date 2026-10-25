@@ -90,6 +90,8 @@ import navgraph as navgraphmod  # noqa: E402
 import prewarm as prewarmmod  # noqa: E402
 import parking as parkingmod  # noqa: E402
 import roads as roadsmod  # noqa: E402
+import roadgeom_ext  # noqa: E402
+from roadgeom_ext.streaming import Selection as RoadGeometrySelection  # noqa: E402
 import randomplace as randomplacemod  # noqa: E402
 import placepreview as placepreviewmod  # noqa: E402
 import pools as poolsmod  # noqa: E402
@@ -1107,18 +1109,22 @@ class Server:
             parts, n = terrainpatchmod.build(anchor.frame, elev, box, path)
         return [(f"{self.vfs_dir}/{os.path.basename(p)}", c) for p, c in parts], n
 
-    def build_roads_tile(self, aid, tx, ty):
+    def build_roads_tile(self, aid, tx, ty, backend="legacy", namespace=None):
         """roads.py: one road tile of anchor aid, written to the session folder. Returns (vfs path,
         chunks) or None if the anchor is gone. Worker threads (fetches the map cells it lacks)."""
         anchor = self.anchors.get(aid)
         if anchor is None or self.mapdata is None:
             return None
+        out_dir = os.path.join(self.out_dir, namespace) if namespace else self.out_dir
+        vfs_dir = f"{self.vfs_dir}/{namespace}" if namespace else self.vfs_dir
+        os.makedirs(out_dir, exist_ok=True)
+        diagnostics = {} if backend == "geos" else None
         if self.road_pool is not None:
             t0 = time.perf_counter()
             res = self.road_pool.submit(
-                blockworker.roads_tile, aid, anchor.lat, anchor.lon, anchor.zooms[0], tx, ty, self.out_dir,
-                self.vfs_dir, self.sidewalks, DETAIL_ROAD_LIFT if self.near_visual == "detail" else 0.0,
-                self.buildings, self.left_hand(anchor), self.mph(anchor), self.anchor_q(anchor)).result()
+                blockworker.roads_tile, aid, anchor.lat, anchor.lon, anchor.zooms[0], tx, ty, out_dir,
+                vfs_dir, self.sidewalks, DETAIL_ROAD_LIFT if self.near_visual == "detail" else 0.0,
+                self.buildings, self.left_hand(anchor), self.mph(anchor), self.anchor_q(anchor), backend).result()
             log.debug("road tile %d_%d: %.2f s (queue + build)", tx, ty, time.perf_counter() - t0)
             return res
         cells = [self.mapdata.cell(k, layers=("roads",), kind="demand").layers.get("roads")
@@ -1171,7 +1177,7 @@ class Server:
                                      tunnels=anchor.tunnels, walls=rwalls,
                                      ground=lambda x, y: roadmeshmod.drawn_ground(anchor.frame, drawn, np.c_[x, y],
                                                                                   self.anchor_q(anchor)),
-                                     terrain_paint=self.surface is not None)
+                                     terrain_paint=self.surface is not None, backend=backend, diagnostics=diagnostics)
         if self.airports is not None:   # runway markings, drawn by the road mesh like the lane lines
             chunks += self.airports.tile_chunks(anchor.frame, tx, ty, elev, roadsmod.tile_bbox)
         x0, y0, _, _ = roadsmod.tile_bbox(tx, ty)
@@ -1184,9 +1190,9 @@ class Server:
             park = parkingmod.clear_of(park, props, drives)
             park = parkingmod.tile_lot_spots(anchor.frame, tx, ty, self.mapdata, elev, items, park)
             buildingsmod.brick_walks(walks, items, anchor.lat, anchor.lon)
-        mesh = roadmeshmod.build(anchor.frame, chunks, elev, (x0, y0, 0.0),
+        mesh = roadgeom_ext.build_mesh(backend, anchor.frame, chunks, elev, (x0, y0, 0.0),
                                  DETAIL_ROAD_LIFT if self.near_visual == "detail" else 0.0,
-                                 clip=box, follow=True, q=self.anchor_q(anchor), drawn=drawn)
+                                 clip=box, follow=True, q=self.anchor_q(anchor), drawn=drawn, diagnostics=diagnostics)
         mesh = blockworker._with_plazas(mesh, anchor.frame, tx, ty, elev, (x0, y0, 0.0), self.surface)
         dmesh = roadmeshmod.deck(chunks, (x0, y0, 0.0),
                                  anchor.bridges.piers_in(roadsmod.tile_bbox(tx, ty)) if anchor.bridges is not None else (),
@@ -1198,8 +1204,9 @@ class Server:
             bld = buildingsmod.road_tile(anchor.frame, tx, ty, self.mapdata,
                                          lambda la, lo: self.ground(anchor.frame, la, lo, self.dem.sample(la, lo, zoom)),
                                          None, None, items)
-        return roadsmod.write_tile(self.out_dir, self.vfs_dir, aid, tx, ty, chunks, walks if self.sidewalks else None,
-                                   mesh, dmesh, bld, props, wires, park, tunnel_mesh=tmesh)
+        return roadgeom_ext.write_tile(out_dir, vfs_dir, aid, tx, ty, chunks, walks if self.sidewalks else None,
+                                       mesh, dmesh, bld, props, wires, park, tunnel_mesh=tmesh,
+                                       backend=backend, diagnostics=diagnostics)
 
     def ground_z_at(self, anchor, e, n):
         """The ground's height (the frame's up) at (e, n) of anchor's frame, from the elevation data (not graded: the
@@ -2471,6 +2478,8 @@ class Server:
             # session folder, and the game's file watchers cost 4.5 ms a frame)
             for stem in ANCHOR_TILE_FILES:
                 doomed += glob.glob(os.path.join(self.out_dir, f"{stem}_{aid}_*"))
+            from roadgeom_ext.streaming import anchor_files
+            doomed += anchor_files(self.out_dir, aid)
             self.queue_delete(p for p in dict.fromkeys(doomed) if os.path.exists(p))
 
 
@@ -2575,7 +2584,8 @@ class Connection:
         self.radius_sent = None
         self.zmax_region = None
         self.weather = weathermod.Tracker()     # real weather: fetch rule, last message sent
-        self.roads = roadsmod.Tracker()         # road tiles sent to the mod (--roads on)
+        self.road_geometry = RoadGeometrySelection(self.s)
+        self.roads = self.road_geometry.tracker()  # per-connection road backend and build epoch
         self.refining = set()                   # graded first blocks on their way (refine_first; send_progress)
         self.ground_wait = {}                   # block key -> when its photo was first seen waiting (ground_progress)
         self.veg = vegetationmod.Tracker()      # vegetation tiles sent to the mod (--trees on)
@@ -2806,13 +2816,14 @@ class Connection:
         trees = self.veg.progress() if self.s.veg is not None else (0, 0)
         want = len(self.desired)
         far = (want - self.backlog(), want)
-        counts = (self.ground_progress(aid), roads, trees, far)
+        geometry = {"epoch": self.road_geometry.epoch, "failed": len(self.roads.retry)}
+        counts = (self.ground_progress(aid), roads, trees, far, geometry)
         now = time.monotonic()
         if counts == getattr(self, "progress_sent", None) or now - getattr(self, "progress_at", 0.0) < PROGRESS_S:
             return
         self.progress_sent, self.progress_at = counts, now
         self.send({"type": "load_progress", "anchorId": aid, "ground": list(counts[0]), "roads": list(roads),
-                   "trees": list(trees), "far": list(far)})
+                   "trees": list(trees), "far": list(far), "roadGeometry": geometry})
 
     def ground_progress(self, aid):
         """(1, 1) once the ground under the player is final, else (0, 1): a teleport's graded first block still on its
@@ -2893,6 +2904,7 @@ class Connection:
                  "appVersion": updatesmod.local_version() or "",     # the release (VERSION): the players' reports
                  "sessionId": self.s.sid, "farFormat": self.s.far_format, "material": farfield.MATERIAL,
                  "nearVisual": self.s.near_visual, "attribution": self.s.attribution()}
+            m["roadGeometry"] = self.road_geometry.capability()
             if self.s.imagery is not None:      # the world map credits the sources its view shows
                 m["imageryCredits"] = self.s.imagery.credits_by_area()
                 m["otherCredits"] = self.s.attribution_rest()
@@ -2987,9 +2999,11 @@ class Connection:
             for line in (lines if isinstance(lines, list) else [])[:PERF_LOG_LINES]:
                 if isinstance(line, str):
                     log.info("game: %s", line[:PERF_LOG_CHARS].replace("\n", " "))
+        elif kind == "road_geometry":
+            self.road_geometry.select(self, msg)
         elif kind == "roads_reset":             # the mod dropped its roads (settings): send them all again
             self.roads.close()
-            self.roads = roadsmod.Tracker()
+            self.roads = self.road_geometry.tracker()
         else:
             log.debug("ignoring message type %r", kind)
 
@@ -3376,7 +3390,7 @@ class Connection:
             self.s.download_ahead(self.s.anchors[aid], *self.focus, *self.vel)
             self.base_refresh(aid)
         if self.s.mapdata is not None and aid == self.active:
-            self.roads.on_pose(self, aid, *self.focus, asyncio.get_running_loop(), self.s.build_roads_tile,
+            self.roads.on_pose(self, aid, *self.focus, asyncio.get_running_loop(), self.road_geometry.builder(self.s),
                                vel=self.vel, ground_busy=self.terrain_wait > 0, view=self.view_at,
                                foci=self.foci)
         if self.s.veg is not None and aid == self.active:

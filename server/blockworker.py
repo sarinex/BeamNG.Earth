@@ -33,6 +33,7 @@ import seacarve as seacarvemod
 import surface as surfacemod
 import terraincache
 import xproc
+import roadgeom_ext
 
 log = logging.getLogger("earthd.blockworker")
 
@@ -336,7 +337,7 @@ def terrain_patch(aid, lat, lon, zoom, box, path):
 
 
 def roads_tile(aid, lat, lon, zoom, tx, ty, out_dir, vfs_dir, sidewalks, lift, buildings=False, left_hand=False,
-               mph=True, q=None):
+               mph=True, q=None, backend="legacy"):
     """earthd.Server.build_roads_tile here (road-tile pool): the anchor's road tile (tx, ty) built and
     written; returns roads.write_tile's (vfs path, chunks). In the server's process its Python made up
     ~80 % of the main process's busy threads (in-game profile 2026-10-13): the block photos and far
@@ -344,6 +345,7 @@ def roads_tile(aid, lat, lon, zoom, tx, ty, out_dir, vfs_dir, sidewalks, lift, b
     import parking as parkingmod
     import roadmesh as roadmeshmod
     import roads as roadsmod
+    diagnostics = {} if backend == "geos" else None
     g, _ = _s.anchor(aid, lat, lon)
     frame = geodesy.EnuFrame(lat, lon)
     cells = [_s.md.cell(k, layers=("roads",), kind="demand").layers.get("roads")
@@ -380,7 +382,8 @@ def roads_tile(aid, lat, lon, zoom, tx, ty, out_dir, vfs_dir, sidewalks, lift, b
                                  left_hand=left_hand, mph=mph, structures=buildingsmod.centres(items, tx, ty) if items else (),
                                  tunnels=tunnels, walls=rwalls,
                                  ground=lambda x, y: roadmeshmod.drawn_ground(frame, drawn, np.c_[x, y], q),
-                                 terrain_paint=getattr(_s, "surface", None) is not None)
+                                 terrain_paint=getattr(_s, "surface", None) is not None,
+                                 backend=backend, diagnostics=diagnostics)
     if _s.airports is not None:         # runway markings, drawn by the road mesh like the lane lines
         chunks += _s.airports.tile_chunks(frame, tx, ty, elev, roadsmod.tile_bbox)
     x0, y0, _, _ = roadsmod.tile_bbox(tx, ty)
@@ -393,7 +396,8 @@ def roads_tile(aid, lat, lon, zoom, tx, ty, out_dir, vfs_dir, sidewalks, lift, b
         park = parkingmod.clear_of(park, props, drives)
         park = parkingmod.tile_lot_spots(frame, tx, ty, _s.md, elev, items, park)
         buildingsmod.brick_walks(walks, items, lat, lon)
-    mesh = roadmeshmod.build(frame, chunks, elev, (x0, y0, 0.0), lift, clip=box, follow=True, q=q, drawn=drawn)
+    mesh = roadgeom_ext.build_mesh(backend, frame, chunks, elev, (x0, y0, 0.0), lift, clip=box, follow=True, q=q,
+                                   drawn=drawn, diagnostics=diagnostics)
     mesh = _with_plazas(mesh, frame, tx, ty, elev, (x0, y0, 0.0), getattr(_s, "surface", None))
     dmesh = roadmeshmod.deck(chunks, (x0, y0, 0.0), bridges.piers_in(roadsmod.tile_bbox(tx, ty)), ctx,
                               bridges.beams_in(roadsmod.tile_bbox(tx, ty)))
@@ -404,8 +408,8 @@ def roads_tile(aid, lat, lon, zoom, tx, ty, out_dir, vfs_dir, sidewalks, lift, b
         bld = buildingsmod.road_tile(frame, tx, ty, _s.md,
                                      lambda la, lo: ground(frame, la, lo, _s.dem.sample(la, lo, zoom)), None, None,
                                      items)
-    return roadsmod.write_tile(out_dir, vfs_dir, aid, tx, ty, chunks, walks if sidewalks else None, mesh, dmesh,
-                               bld, props, wires, park, tunnel_mesh=tmesh)
+    return roadgeom_ext.write_tile(out_dir, vfs_dir, aid, tx, ty, chunks, walks if sidewalks else None, mesh, dmesh,
+                                   bld, props, wires, park, tunnel_mesh=tmesh, backend=backend, diagnostics=diagnostics)
 
 
 def _with_plazas(mesh, frame, tx, ty, elev, origin, surface):

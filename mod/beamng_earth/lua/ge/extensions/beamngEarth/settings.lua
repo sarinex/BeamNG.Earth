@@ -50,6 +50,7 @@ M.SCHEMA = {
   groundCoverDensity = { kind = 'enum', default = 'normal', values = { 'low', 'normal', 'high' }, label = 'Grass density' },
   -- roads near the player (roads.lua; the server's --roads on)
   roads = { kind = 'bool', default = true, label = 'Roads' },
+  roadGeometryBackend = { kind = 'enum', default = 'legacy', values = { 'legacy', 'geos' }, label = 'Road Geometry Generator' },
   hudVisible = { kind = 'bool', default = false, label = 'Status HUD at level start' },
   -- the status bar at the top (statusbar.lua): street, town / state / country, loading, fps
   statusBar = { kind = 'bool', default = true, label = 'Status bar' },
@@ -73,7 +74,7 @@ M.SCHEMA = {
   updateDismissed = { kind = 'string', default = '', maxLen = 40, label = 'Update notice dismissed (version)' },
 }
 M.ORDER = { 'rebaseDistance', 'viewDistanceMode', 'viewDistanceKm', 'hazeStrength', 'skyMode', 'clouds',
-  'weatherMode', 'realGravity', 'groundCover', 'groundCoverDensity', 'roads', 'hudVisible', 'statusBar',
+  'weatherMode', 'realGravity', 'groundCover', 'groundCoverDensity', 'roads', 'roadGeometryBackend', 'hudVisible', 'statusBar',
   'placeNamesOnline', 'creditsVisible', 'beammpOnLaunch',
   'creditsCorner', 'creditsSize', 'cacheCapGb', 'devOutlineKm', 'devMapKm' }
 
@@ -248,6 +249,10 @@ M.APPLY = {
     local core = ext('beamngEarth_core')
     if core and core.setRoadsEnabled then core.setRoadsEnabled(v) else require('beamngEarth/roads').setEnabled(v) end
   end,
+  roadGeometryBackend = function(v)
+    local core = rawget(_G, 'beamngEarth_core')
+    if core and core.setRoadGeometry then core.setRoadGeometry(v) end
+  end,
   hudVisible = function(v)
     if M.pageExists() then ui.visible = v end
   end,
@@ -352,6 +357,7 @@ function M.uiState()
   status.gravity = w and w.gravityLine and w.gravityLine() or nil
   status.deshadow = st and st.deshadow or 'off'
   status.colormatch = st and st.colormatch or 'off'
+  status.roadGeometry = st and st.roadGeometry or nil
   -- the download cache: the server's last numbers, fresh ones asked every CACHE_POLL-th call (the page
   -- polls every 2 s while it is open)
   cachePolls = cachePolls + 1

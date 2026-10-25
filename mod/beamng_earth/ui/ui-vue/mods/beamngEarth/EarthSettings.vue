@@ -257,6 +257,10 @@ const settingsSchema = [
       { id: "groundCoverDensity", type: "select", default: "normal", name: "Grass density", desc: "How dense the grass and shrubs are. Without the optional grass patch (tools/gcpatch, Linux) the game regrows the grass in one slower frame each time the ground under the car moves (every ~130-190 m); higher density makes that frame longer.",
         options: [ { label: "Low", value: "low" }, { label: "Normal", value: "normal" }, { label: "High", value: "high" } ] },
       { id: "roads", type: "bool", default: true, name: "Roads", desc: "Real roads from OpenStreetMap / Overture within about 600 m of the car: paved roads as asphalt, gravel and dirt roads and tracks as worn dirt tracks, and the same surfaces under the tyres. Bridges, tunnels, markings and junction shapes come later." },
+      { id: "roadGeometryBackend", type: "select", default: "legacy", name: "Road Geometry Generator", options: [
+        { value: "legacy", label: "Legacy (Original)" }, { value: "geos", label: "GEOS + Earcut (Experimental)" }
+      ], desc: "Rebuilds nearby pavement and sidewalks after stopping on terrain clear of curbs and bridges. Simulation is held while replacement meshes and collision load. Multiplayer changes wait until the session ends." },
+      { id: "roadGeometry", type: "info", name: "Active road generator", desc: "Confirmed generator, pending rebuilds and server capability." },
     ],
   },
   {
@@ -365,6 +369,7 @@ function fmt(v, digits) {
 function infoValue(item) {
   const s = status.value
   if (item.id === "connection") return connectionText.value
+  if (item.id === "roadGeometry") return (s.roadGeometry && s.roadGeometry.text) || "Legacy (Original)"
   if (item.id === "anchor") return s.anchorId ? `#${s.anchorId}  ${fmt(s.anchorLat, 5)}, ${fmt(s.anchorLon, 5)}` : "none"
   if (item.id === "player") return (typeof s.playerLat === "number") ? `${fmt(s.playerLat, 5)}, ${fmt(s.playerLon, 5)}  (${fmt(s.dist / 1000, 1)} km from origin)` : "-"
   if (item.id === "attribution") return s.attribution || "-"

@@ -57,6 +57,7 @@ local edgeguard = require('beamngEarth/edgeguard') -- never fall off the last bl
 local drophold = require('beamngEarth/drophold') -- a car dropped far away waits for its ground
 local groundcover = require('beamngEarth/groundcover') -- grass on the surface layers (docs/ROADMAP.md v1.5)
 local roads = require('beamngEarth/roads') -- DecalRoads from the server's road tiles (docs/ROADMAP.md v1.6)
+local roadgeom = require('beamngEarth/roadgeom') -- optional backend protocol and safe rebuild state
 local sea = require('beamngEarth/sea') -- the sea's WaterBlock tiles (server seatiles.py)
 local trees = require('beamngEarth/trees') -- trees, bushes, rocks (server vegetation.py)
 local parking = require('beamngEarth/parking') -- parked cars on the road tiles' spots (stock gameplay_parking)
@@ -659,6 +660,8 @@ local function onMessage(msg)
     trees.clear()
     setStatus('Disconnected from companion server: ' .. tostring(msg.error))
   elseif t == 'hello' then
+    local restoreBackend = roadgeom.hello(msg.roadGeometry, settings.get('roadGeometryBackend'))
+    if restoreBackend then settings.set('roadGeometryBackend', restoreBackend) end
     st.sessionId = msg.sessionId
     st.refreshLater = nil       -- (a restarted server numbers its anchors from 1 again)
     roads.setSession(msg.sessionId)   -- the road / building tiles' pooled shape files belong to this server
@@ -741,6 +744,7 @@ local function onMessage(msg)
     if msg.radius ~= nil then M.setFarRadius(msg.radius) end
   elseif t == 'load_progress' then      -- the loading line's counts (server Connection.send_progress)
     st.loadProgress = msg
+    roadgeom.progress(msg)
   elseif t == 'share' then              -- our world server serving our BeamMP group (mpsession.lua, peerwork.py)
     pcall(mpsession.onShare, msg)
   elseif t == 'terrain_patch' then
@@ -791,9 +795,13 @@ local function onMessage(msg)
     st.terrainErrorAt = st.clock -- the edge guard holds the car meanwhile
     setStatus('Terrain request failed: ' .. tostring(msg.error))
   elseif t == 'roads_tile' then
-    roads.onTile(msg, st.anchorId)
+    if roadgeom.accept(msg) then roads.onTile(msg, st.anchorId); roadgeom.tile(msg)
+    else roads.rejectGeometry(msg) end
   elseif t == 'roads_drop' then
-    roads.onDrop(msg)
+    if roadgeom.accept(msg) then roads.onDrop(msg) end
+  elseif t == 'road_geometry_state' then
+    local restoreBackend = roadgeom.state(msg, roads.retireGeometry)
+    if restoreBackend then settings.set('roadGeometryBackend', restoreBackend) end
   elseif t == 'far_tile' then
     farfield.onTile(msg)
   elseif t == 'far_swap' then
@@ -1732,6 +1740,12 @@ local function onUpdate(dtReal, dtSim)
     -- the roads before the far tiles: they share the governor's budget and the first to ask gets it; after a
     -- teleport the far field's hundreds of tiles took it frame after frame and the road meshes under the car
     -- came after it had passed (Brasov, Sinaia 2026-10-15: the car drove bare ground)
+    if roadgeom.needsUpdate() then
+      roadgeom.update(dtReal, {connected = net.isConnected(), speed = st.player and st.player.speed or math.huge,
+        safe = function() return roads.enabled and roads.geometrySafe() and not dropHold.active and not st.terrainPending end,
+        multiplayer = simhold.mpSession(), paused = simPaused, pause = simPause, roads = roads, send = net.send,
+        settled = roads.geometrySettled})
+    end
     roads.update(gov, st.anchorId, st.player, M.viewAway())
     t = mark('roads', t)
     farfield.update(gov, (gov.w1 or dtReal * 1000) / 1000, st.cam, st.player)
@@ -1867,6 +1881,7 @@ local function onClientPreStartMission(levelPath)
 end
 
 local function onClientEndMission()
+  roadgeom.cancel(simPause, roads)
   hudapps.unhookCityZone()
   hudapps.unhookMinimapNorth()
   postfx.restore()
@@ -1918,6 +1933,7 @@ end
 M.onFilesChanged = onFilesChanged
 
 local function onExtensionUnloaded()
+  roadgeom.cancel(simPause, roads)
   hudapps.unhookCityZone()
   hudapps.unhookMinimapNorth()
   groundcover.enginePatch(false)
@@ -2083,6 +2099,7 @@ function M.status()
     baseRefreshes = st.baseRefreshes,
     rebaseDistance = rebase.distance, lastFollowMs = st.lastFollowMs, lastRebaseMs = st.lastRebaseMs,
     lastRebaseWaitFrames = st.lastRebaseWait, rebaseLag = rebaseLag, lastMoveLag = st.lastMoveLag, player = st.player, far = farfield.stats(), governor = gov:snapshot(), status = st.status,
+    roadGeometry = roadgeom.status(),
     serverBacklog = st.serverBacklog, followCount = st.followCount, rebaseCount = st.rebaseCount,
     cells = crossover.cells(), blockSize = blockSize, anchorLatency = st.anchorLatency,
     terrainLatency = st.terrainLatency, horizon = horizonOn, farRadius = farRadius,
@@ -2178,6 +2195,10 @@ function M._governor() return gov end
 -- The Roads setting: off removes them; on again asks the server to send the tiles once more.
 function M.setRoadsEnabled(on)
   if roads.setEnabled(on) then net.send({ type = 'roads_reset' }) end
+end
+
+function M.setRoadGeometry(value)
+  if not roadgeom.request(value) and value ~= 'legacy' then settings.set('roadGeometryBackend', 'legacy') end
 end
 
 M.onUpdate = onUpdate

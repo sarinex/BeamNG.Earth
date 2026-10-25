@@ -3591,7 +3591,7 @@ def drains(run, side, caps, walk_w=None):
 
 def build_tile(frame, tx, ty, cells, elev, urban_fn=None, walks=None, bridges=None, widths=None, props=None,
                lines=None, wires=None, town=None, park=None, left_hand=False, structures=(), mph=True, tunnels=None,
-               walls=None, deck_context=None, ground=None, terrain_paint=True):
+               walls=None, deck_context=None, ground=None, terrain_paint=True, backend="legacy", diagnostics=None):
     """The chunks of one tile. cells: the mapgeom.Features of the "roads" layer of every cell touching
     the tile; elev(lat, lon) -> metres (the DEM); urban_fn: as road_specs. Features in several cells are
     taken once (by id). The carriageways, then each road's sidewalks / gutters / markings (extras), cut
@@ -3817,6 +3817,9 @@ def build_tile(frame, tx, ty, cells, elev, urban_fn=None, walks=None, bridges=No
                   if sp.kind == "paved" and _rule_value(f.rules.get("subclass"), i) == "parking_aisle"}
         if aisles:
             park.extend(parking.aisle_spots(roads, aisles, (x0, y0, x1, y1)))
+    if backend == "geos":
+        from roadgeom_ext.geos_backend import surface_chunks
+        chunks = surface_chunks(roads, chunks, corners, exact, diagnostics if diagnostics is not None else {})
     return chunks
 
 
@@ -3956,7 +3959,7 @@ def shape_files(aid, tx, ty):
 
 
 def write_tile(out_dir, vfs_dir, aid, tx, ty, chunks, walks=None, road_mesh=None, deck_mesh=None, bld=None,
-               props=None, wires=None, park=None, tunnel_mesh=None):
+               props=None, wires=None, park=None, tunnel_mesh=None, backend="legacy", diagnostics=None):
     """Write a tile's chunks (atomically), its sidewalk mesh (walks: build_tile's runs, if any:
     `walks_<a>_<tx>_<ty>.cdae`, announced in the tile as "walk": {shape, pos}) and its road mesh
     (road_mesh: roadmesh.build's result: `road_<a>_<tx>_<ty>.cdae`, "road": {shape, pos}; the mod then
@@ -3986,7 +3989,8 @@ def write_tile(out_dir, vfs_dir, aid, tx, ty, chunks, walks=None, road_mesh=None
         data["tunnel"] = {"shape": f"{vfs_dir}/{shape}", "pos": [x0, y0, 0.0]}
     if walks:
         x0, y0, _, _ = tile_bbox(tx, ty)
-        b = sidewalks.Builder((x0, y0, 0.0), collision=True)
+        from roadgeom_ext import sidewalk_builder
+        b = sidewalk_builder(backend, (x0, y0, 0.0), collision=True)
         for wk in walks:
             if "corner" in wk:
                 c = wk["corner"]
@@ -4037,6 +4041,11 @@ def write_tile(out_dir, vfs_dir, aid, tx, ty, chunks, walks=None, road_mesh=None
         data["props"] = {"groups": groups, "items": [[groups.index(r[0])] + r[1:] for r in props]}
     if park:                        # parking.py's spots [x, y, z, heading] for the stock parked cars (parking.lua)
         data["park"] = park
+    if diagnostics is not None:
+        diagnostics["meshBytes"] = sum(os.path.getsize(os.path.join(out_dir, name))
+                                       for name in shape_files(aid, tx, ty).values()
+                                       if os.path.isfile(os.path.join(out_dir, name)))
+        data["roadGeometry"] = diagnostics
     tmp = staging.tmp_for(path)
     with open(tmp, "w") as f:
         f.write(json.dumps(data, separators=(",", ":")))    # json.dump to a file streams through the pure-Python encoder

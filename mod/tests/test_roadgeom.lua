@@ -1,0 +1,63 @@
+-- luajit mod/tests/test_roadgeom.lua
+local dir = (arg[0]:match('^(.*)[/\\]') or '.')
+local T = dofile(dir .. '/testlib.lua')
+local function fresh()
+  package.loaded['beamngEarth/roadgeom'] = nil
+  return require('beamngEarth/roadgeom')
+end
+local m = fresh()
+T.check(m.status().active == 'legacy', 'default is legacy')
+T.check(m.hello(nil, 'geos') == 'legacy', 'old server restores persisted legacy')
+T.check(not m.request('geos'), 'unsupported GEOS request rejected')
+T.check(m.status().text:find('does not support'), 'unsupported capability visible')
+
+m = fresh()
+m.hello({version=1, active='legacy', epoch=0}, 'legacy')
+local sent, paused, retired, hold, settled = {}, false, 0, false, false
+local ctx = {connected=true, safe=true, speed=20, multiplayer=false,
+  roads={setHold=function(v) hold=v end},
+  paused=function() return paused end, pause=function(v) paused=v end,
+  settled=function() return settled end, send=function(v) sent[#sent+1]=v end}
+local function switch(to, epoch)
+  m.request(to)
+  ctx.speed = 20
+  m.update(2, ctx)
+  T.check(#sent == epoch-1, 'driving defers request')
+  ctx.speed = 0
+  m.update(1.1, ctx)
+  T.check(sent[#sent].backend == to and paused and hold, 'stationary switch holds simulation')
+  m.state({ok=true, backend=to, epoch=epoch}, function() retired=retired+1 end)
+  T.check(not m.accept({roadEpoch=epoch-1, roadBackend=to}), 'stale worker tile rejected')
+  T.check(m.accept({roadEpoch=epoch, roadBackend=to}), 'current tile accepted')
+  T.check(m.status().active ~= to, 'active waits for geometry and collision')
+  m.progress({roads={5,5}})
+  m.progress({roads={5,5}, roadGeometry={epoch=epoch, failed=1}})
+  settled=true; m.update(.1,ctx)
+  T.check(paused, 'failed server tiles do not count as loaded geometry')
+  m.progress({roads={5,5}, roadGeometry={epoch=epoch-1, failed=0}})
+  m.update(.1,ctx)
+  T.check(paused, 'old progress epoch cannot complete a rebuild')
+  m.progress({roads={5,5}, roadGeometry={epoch=epoch, failed=0}})
+  settled=false; m.update(.1,ctx)
+  T.check(paused, 'waits for governor and collision')
+  settled=true; m.update(.1,ctx)
+  T.check(m.status().active == to and not paused and not hold, 'active only after loading and collision')
+end
+switch('geos',1)
+switch('legacy',2)
+switch('geos',3)
+T.check(retired==3, 'both directions retire old geometry')
+m.request('legacy'); ctx.multiplayer=true; m.update(5,ctx)
+T.check(#sent==3 and m.status().text:find('multiplayer'), 'multiplayer switch deferred')
+ctx.multiplayer=false; ctx.safe=false; m.update(5,ctx)
+T.check(#sent==3, 'unsafe collision position deferred')
+ctx.safe=true; m.update(1.1,ctx)
+m.state({ok=false, error='missing Shapely'}, function() end)
+m.update(.1,ctx)
+T.check(not paused and m.status().text:find('missing Shapely'), 'missing dependencies release hold with diagnostic')
+m.request('legacy'); m.update(1.1,ctx)
+ctx.connected=false; m.update(.1,ctx)
+T.check(not paused, 'disconnect releases simulation hold')
+m.hello({version=1, active='legacy', epoch=0}, 'geos')
+T.check(m.status().pending=='geos', 'reconnect re-requests saved preference')
+T.done('test_roadgeom')

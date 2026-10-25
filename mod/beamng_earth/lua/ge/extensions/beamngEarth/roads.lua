@@ -531,6 +531,42 @@ function M.onDrop(msg)
   sinceChange = stopwatch.new()
 end
 
+-- Backend changes retire through the normal governor queue, preserving slot reference accounting.
+function M.retireGeometry()
+  lastError = nil
+  local keys = {}
+  for key in pairs(tiles) do keys[#keys + 1] = key end
+  for _, key in ipairs(keys) do dropTile(key) end
+end
+
+function M.rejectGeometry(msg)
+  for what in pairs(msg.slots or {}) do slotDrop(msgSlot(msg, what)) end
+end
+
+function M.geometrySettled()
+  return #createQ == 0 and #walkQ == 0 and #deleteQ == 0 and #held == 0 and not collisionDirty and not lastError
+end
+
+function M.geometrySafe()
+  for _, t in pairs(tiles) do
+    for what, boxes in pairs(t.colliders or {}) do
+      if playerIn(boxes, what) then return false end
+      -- A car ON a bridge also needs its old deck continuously: wait until it is back on terrain.
+      if what == 'deck' or what == 'tunnel' then
+        local veh = getPlayerVehicle and getPlayerVehicle(0)
+        local p = veh and veh:getPosition()
+        if p then
+          for _, b in ipairs(boxes) do
+            if p.x >= b[1] - 3 and p.x <= b[4] + 3 and p.y >= b[2] - 3 and p.y <= b[5] + 3
+                and p.z >= b[3] - 3 and p.z <= b[6] + 3 then return false end
+          end
+        end
+      end
+    end
+  end
+  return true
+end
+
 -- Origin rebase (core.lua finishRebase): the shown tiles move into the new frame (p_new = R*p + t: their TSStatics
 -- turned by R, as farfield.transform) and stay as "ghosts" until the new anchor's tiles over them are made
 -- (ghostsCovered). Before (2026-10-17, forced rebase at Fells Point) every building, road mesh and sidewalk went at

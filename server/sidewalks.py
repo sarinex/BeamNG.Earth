@@ -180,12 +180,15 @@ def refine(s, ramps, step=0.5, margin=1.0):
 class Builder:
     """Accumulates sidewalk runs and corners into one mesh (positions relative to `origin`)."""
 
-    def __init__(self, origin, collision=False):
+    def __init__(self, origin, collision=False, triangulator=None):
         self.origin = np.asarray(origin, np.float64)
         self.P, self.UV, self.T, self.M = [], [], [], []
         self.n = 0
         self.col = Builder._lean(origin) if collision else None   # the lean collision mesh beside it
         self.lean = False
+        self.triangulator = triangulator
+        if self.col is not None:
+            self.col.triangulator = triangulator
 
     @classmethod
     def _lean(cls, origin):
@@ -313,17 +316,20 @@ class Builder:
         # planar, at the runs' texel density (the sheet is 4096 x 1024: SLAB_REPEAT_M wide, a quarter
         # of that high); a constant v stretched one texel row over the corner (the user, 2026-10-11)
         UV = np.c_[poly[:, 0] / SLAB_REPEAT_M, poly[:, 1] / (SLAB_REPEAT_M / 4.0)]
-        base = self._add(poly, UV)
+        if self.triangulator is not None:
+            poly, fan = self.triangulator(poly)
+            UV = np.c_[poly[:, 0] / SLAB_REPEAT_M, poly[:, 1] / (SLAB_REPEAT_M / 4.0)]
         m = len(poly)
-        if len(out) == 3:                                   # a fan from O
+        if self.triangulator is None and len(out) == 3:       # a fan from O
             o_idx = k + 1
             fan = np.array([(o_idx, a, (a + 1) % m) for a in range(m) if a != o_idx and (a + 1) % m != o_idx])
-        else:                                               # round a merged junction's connector: ear clipping
+        elif self.triangulator is None:                      # round a merged junction's connector: ear clipping
             import buildings
             xy = poly[:, :2]
             area = float(np.sum(xy[:, 0] * np.roll(xy[:, 1], -1) - np.roll(xy[:, 0], -1) * xy[:, 1]))
             order = np.arange(m) if area > 0 else np.arange(m)[::-1]
             fan = order[buildings.triangulate(xy[order])]
+        base = self._add(poly, UV)
         self.T.append(base + _orient(fan, poly, np.array([0.0, 0.0, 1.0])))
         self.M.append(np.full(len(fan), 1))
         c = poly[:, :2].mean(axis=0)
