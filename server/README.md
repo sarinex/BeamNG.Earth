@@ -67,6 +67,8 @@ API keys, no other packages (the `.cdae` writer has its own msgpack encoder). Th
 (`mapdata.py`, "Map data" below; not used by earthd yet) also needs `duckdb` (≥ 1.5) and `fsspec`:
 `pip install -r server/requirements.txt`.
 
+Optional Group 4 road intelligence uses a separate pinned [requirements-roadintel-ext.txt](requirements-roadintel-ext.txt), local full-tag OSM extracts and offline `netconvert` preprocessing. See [installation and architecture](../docs/ROADINTEL.md) and the [single pending in-game checklist](../docs/ROADINTEL_EVALUATION.md). Both intelligence and geometry default to Legacy; Group 1's dependencies and installer remain independent.
+
 The v1.2 behaviour is `--near-visual terrain --imagery off` (the integration drive and `test_e2e.py`
 run that way).
 

@@ -104,3 +104,29 @@ Run the other existing Lua tests and source/native packaging checks too. Follow 
 Select **Legacy (Original)** in-game and wait for the active line to confirm completion. For source installations without the optional packages, use `--road-geometry legacy` on install/start. Missing packages never prevent legacy import/start. To remove the extension code, revert the isolated feature commits (UI/protocol, backend hooks, installer/package integration and documentation), keeping any unrelated fork changes. Do not delete legacy algorithms or remove only the package while leaving imports/hooks behind. No manual cache deletion is needed for normal backend switching.
 
 Library contracts: [Shapely precision policy](https://shapely.readthedocs.io/en/stable/reference/shapely.set_precision.html), [Shapely polygon repair](https://shapely.readthedocs.io/en/2.1.2/reference/shapely.make_valid.html), [Earcut Python ring endpoints](https://github.com/skogler/mapbox_earcut_python).
+
+## Optional Group 4 road intelligence
+
+Group 4 starts from the user's fixed Group 1 head `e3b1dab`, without resetting its switching fixes. Details, installation, source/cache contracts, bounds and limits are in [ROADINTEL.md](ROADINTEL.md). The single pending engine checklist is [ROADINTEL_EVALUATION.md](ROADINTEL_EVALUATION.md). No upstream push or merge is included. The original and Group 1 requirements files stay unchanged; SUMO/PyOsmium are pinned separately in `server/requirements-roadintel-ext.txt`.
+
+Extension ownership: `server/roadintel_ext/{model,runtime,sumo,navigation,arrows}.py`, `tools/prepare_roadintel.py`, `tools/benchmark_roadintel.py`, `server/tests/{test_roadintel,roadintel_fixtures}.py`, and `mod/tests/test_roadintel.lua`. `model` normalizes supported cross-sections, `runtime` supplies immutable feature/anchor views, `sumo` performs bounded offline native import, `navigation` projects verified SUMO turns onto the existing custom graph, and `arrows` emits supported mapped glyphs from the existing stock white-line material.
+
+Additional upstream hooks to review after merging TecnaGamer updates:
+
+| File | Hook / contract |
+| --- | --- |
+| `roads.py` | Trailing optional `Spec.intel`; final ground/bridge/tunnel spec adapter; enriched markings and sidewalk sides; per-feature diagnostics; avoid inferred bulb-outs on mapped sections |
+| `navgraph.py` | Enriched driving width, direction/counts and driving-center offset; passenger access guard; retain edge→source correspondence for the final movement adapter |
+| `parking.py` | Do not place a car on an enriched side without a dedicated parking width |
+| `earthd.py` | One-line anchor-view decorators on terrain/provisional builds, grading, road/nav/far/building/patch producers, base photos and related warm/elevation entry points; bind dataset before first terrain; no provisional partial model for SUMO anchors; wait for a matching replacement anchor before new roads/AI |
+| `roadgeom_ext/streaming.py` | Extend the existing Selection with independent intelligence, dataset snapshot and terrain barrier; advertise additive capability/fields; reset both trackers under the same epoch |
+| `peerwork.py` | Include extension Python files in source identity; experimental anchors use upstream thread builders rather than unmodified/distributed process workers |
+| Lua `roadgeom.lua` | Existing state machine now tracks both dimensions; current terrain and applied AI are completion barriers; late terrain cannot commit after hold/epoch expiry |
+| Lua `core.lua` | Request same-origin fresh anchor, import it under the existing hold/rebase path, retire old road/AI state, gate nav messages and wait for far/road/AI settlement |
+| Lua `navgraph.lua` | Current graph settlement accessor, retirement and retained diagnostics; `controlNode` resolves existing signal controller references after portal splitting |
+| Lua `settings.lua` / `EarthSettings.vue` | Independent persisted `roadIntelligenceBackend`, Legacy default, requested/accepted/loaded/incomplete status |
+| `tools/package.py` | Include preparation CLI, optional requirements (via server tree), documentation and benchmark report in source ZIP; frozen SUMO bundling is deliberately not added |
+
+Keep the original update procedure above. After resolving conflicts, compare `Spec` defaults, feature immutability, surface/grading data access, the anchor and ChunkCache lifetime, bridge/tunnel elevation sampling, signal-control graph references, stale worker suppression and pooled shape acknowledgements. Ensure a new producer cannot bypass `server_for(anchor)` and accidentally paint Legacy widths into a SUMO anchor. Bump the road-intelligence format version whenever normalized/import policy changes; do not re-use old cache pointers under a new policy.
+
+Run the full Python/Lua suites, the Group 4 synthetic benchmark, and source packaging. The Lua test runner now supports its existing scoping/sky suites on Windows/Lupa too. The existing CLI default golden test ignores the additive capability only after asserting both actual defaults are Legacy; the mocked Linux launcher test preserves Windows drive letters when parsing container volumes. These are test portability/fixture changes, not launcher behavior changes. Follow the single manual checklist before claiming any engine result. To disable the feature, choose Legacy intelligence and wait for the complete coordinated terrain rollback; geometry can remain independently Legacy or GEOS.

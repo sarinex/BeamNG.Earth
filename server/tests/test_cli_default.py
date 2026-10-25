@@ -179,6 +179,9 @@ class CliDefaultTest(unittest.TestCase):
     def test_command_line_default_is_m1(self):
         want = json.loads(FIXTURE.read_text())
         got = json.loads(json.dumps(compute(Path(__file__).resolve().parents[1])))
+        capability = got["hello"].pop("roadGeometry")
+        self.assertEqual((capability["active"], capability["intelligence"], capability["epoch"]), ("legacy", "legacy", 0))
+        self.assertTrue(capability["coordinatedTerrain"])
         self.assertEqual(sorted(got), sorted(want))
         for k in want:
             self.assertEqual(got[k], want[k], k)

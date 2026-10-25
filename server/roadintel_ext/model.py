@@ -9,7 +9,7 @@ import re
 
 
 def count(value):
-    text = str(value or "")
+    text = "" if value is None else str(value)
     return int(text) if re.fullmatch(r"[0-9]+", text) and 0 <= int(text) <= 12 else None
 
 
@@ -58,6 +58,8 @@ class CrossSection:
     mapped_width: object
     envelope_width: float
     sidewalk_sides: object = None
+    arrows_forward: bool = False
+    arrows_backward: bool = False
 
     @property
     def driving_width(self):
@@ -110,6 +112,8 @@ def normalize(tags, spec, *, reverse=False, left_hand=False, provenance="OSM ext
         raise ValueError("lane count outside supported bounds")
     tf = turn_lanes(tags.get("turn:lanes:forward", tags.get("turn:lanes") if direction > 0 else None), f)
     tb = turn_lanes(tags.get("turn:lanes:backward", tags.get("turn:lanes") if direction < 0 else None), b)
+    if not direction and tags.get("turn:lanes"):
+        notes.append("undirected turn:lanes retained without assigning it to either travel direction")
     parking, shoulder = [], []
     for side in ("left", "right"):
         p = tags.get(f"parking:{side}", tags.get("parking:both", tags.get(f"parking:lane:{side}", tags.get("parking:lane:both"))))
@@ -125,6 +129,8 @@ def normalize(tags, spec, *, reverse=False, left_hand=False, provenance="OSM ext
     widths = None
     raw = tags.get("width:lanes")
     if raw:
+        if f and b:
+            raise ValueError("undirected lane widths on a two-way road are ambiguous")
         widths = tuple(metres(x) for x in raw.split("|"))
         if len(widths) != total or any(x is None or not 1.8 <= x <= 5.5 for x in widths):
             raise ValueError("invalid width:lanes")
@@ -136,6 +142,8 @@ def normalize(tags, spec, *, reverse=False, left_hand=False, provenance="OSM ext
         widths = wf + wb if left_hand else tuple(reversed(wb)) + wf
     import roads
     mapped_width = metres(tags.get("width"))
+    if "width" in tags and (mapped_width is None or mapped_width < 2):
+        raise ValueError("ambiguous or invalid mapped width")
     available = (mapped_width - sum(parking) - sum(shoulder)) if mapped_width else None
     if widths is None:
         lane_width = available / total if available is not None else roads.LANE_W.get(spec.cls, roads.LANE_W_DEFAULT)
@@ -203,4 +211,6 @@ def markings(spec, pts, lon, left_hand=False):
     if spec.cls in roads.EDGE_LINE_CLASSES:
         for offset in (section.drive_left, section.drive_right):
             result.append((roads.EDGE_LINE, roads.EDGE_LINE["w"], roads.offset_polyline(pts, offset)))
+    from .arrows import ribbons
+    result.extend(ribbons(section, pts, left_hand))
     return result

@@ -16,9 +16,12 @@ import sys, time
 if sys.argv[1]:
     sys.path.insert(0, sys.argv[1])
 from lupa.luajit21 import LuaRuntime
+from pathlib import Path
 lua = LuaRuntime()
 lua.globals().arg = lua.table_from({0: sys.argv[2]})
 lua.globals().test_clock = time.perf_counter
+lua.globals().test_lua_files = lua.table_from([str(p).replace('\\\\', '/') for p in
+    sorted((Path(sys.argv[2]).resolve().parents[1] / 'beamng_earth' / 'lua').rglob('*.lua'))])
 # Pure suites need the same wall-clock contract as the game's hptimer/LuaSocket.
 lua.execute("package.preload.socket = function() return {gettime=test_clock} end")
 lua.execute(open(sys.argv[2], encoding='utf-8').read())

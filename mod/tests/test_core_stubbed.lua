@@ -817,6 +817,40 @@ core.reconnect()
 T.check(core.cacheState() == nil and not core.cacheClear(), 'disconnected: numbers gone, no request sent')
 beamngEarth_settings = nil
 
+-- Coordinated intelligence uses the same-origin terrain commit even while simulation is held.
+do
+  frames(3) -- finish the mocked reconnect
+  local world = core._state()
+  world.anchor = geodesy.newAnchor(36.5785, -118.2923)
+  world.anchorId, world.anchorSession, world.sessionId = 900, 's12', 's12'
+  world.active, world.resync, world.pending = true, false, nil
+  local selection = require('beamngEarth/roadgeom')
+  selection.hello({version=1,active='legacy',intelligence='legacy',epoch=0,requestIds=true,
+    coordinatedTerrain=true,navEpochs=true,navRequired=false}, 'legacy', 'legacy')
+  local request
+  selection.requestIntelligence('sumo')
+  selection.update(1.1,{connected=true,speed=0,safe=true,multiplayer=false,
+    roads={setHold=function() end},paused=function() return false end,pause=function() end,
+    settled=function() return false end,send=function(msg) request=msg end})
+  T.check(request and request.intelligence=='sumo', 'intelligence request shares the geometry protocol')
+  local origin = core._state().anchor
+  local before, pos = calls.importMaps, vec3(veh.pos)
+  serverSend({type='road_geometry_state',ok=true,backend='legacy',intelligence='sumo',epoch=1,
+    requestId=request.requestId,terrainRebuild=true})
+  frame(true)
+  local prepared=last('prepare_anchor')
+  T.check(prepared.lat==origin.lat and prepared.lon==origin.lon, 'intelligence terrain keeps the exact geographic origin')
+  serverSend({type='anchor_ready',requestId=prepared.requestId,anchorId=901,lat=prepared.lat,lon=prepared.lon,
+    roadEpoch=1,groundZ=0,terrain={cx=prepared.cx,cy=prepared.cy,
+      heightmap='/temp/beamngEarth/s12/hm_intelligence.png',size=lattice.N,squareSize=SQ,zBase=1120,maxHeight=1024,q=1/64}})
+  frame(true)
+  T.check(calls.importMaps==before+1 and last('commit_anchor').anchorId==901,
+    'intelligence commits new terrain and collision while paused')
+  T.check(veh.pos.x==pos.x and veh.pos.y==pos.y and veh.pos.z==pos.z, 'identity intelligence rebuild does not move the vehicle')
+  T.check(selection.intelligenceStatus().terrainReady and not selection.intelligenceStatus().active,
+    'terrain completion still waits for road and graph settlement')
+end
+
 core.onExtensionUnloaded()
 T.check(sky.atmoPlanetRadius == 6360 and scenetree.theLevelInfo.visibleDistance == 100000,
   'unload: the level keeps running with its own sky and the 100 km view distance')

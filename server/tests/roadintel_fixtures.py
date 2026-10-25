@@ -6,7 +6,7 @@ import numpy as np
 from types import SimpleNamespace
 
 
-def network(path, kind="cross", restriction=True):
+def network(path, kind="cross", restriction=True, left_hand=False):
     coords = {1: (20, 120), 2: (120, 120), 3: (240, 120), 4: (120, 20), 5: (120, 240)}
     ways = {10: [1, 2], 11: [2, 3], 20: [4, 2], 21: [2, 5]}
     if kind == "T":
@@ -23,6 +23,8 @@ def network(path, kind="cross", restriction=True):
     elif kind == "roundabout":
         coords = {1: (20, 120), 2: (90, 120), 3: (120, 150), 4: (150, 120), 5: (120, 90), 6: (240, 120)}
         ways = {10: [1, 2], 11: [4, 6], 30: [2, 3, 4, 5, 2]}
+        if not left_hand:
+            ways[30].reverse()
     elif kind == "bridge":
         # Same XY crossing, distinct OSM/Overture connectors and level: never join.
         coords[6] = coords[2]

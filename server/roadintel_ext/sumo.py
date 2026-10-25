@@ -6,16 +6,72 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 import xml.etree.ElementTree as ET
+import xml.sax
 import multiprocessing
 
 from . import VERSION
 
 MAX_WAYS = 30000
 MAX_NODES = 250000
-MAX_OUTPUT = 128 * 1024 * 1024
+MAX_SOURCE_NODES = 10000000
+MAX_OUTPUT = 32 * 1024 * 1024
 REGION_DEG = 0.05
 HALO_DEG = 0.02
+
+
+def _rss(pid):
+    """Working-set bound without adding a runtime monitoring dependency."""
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+        class Counters(ctypes.Structure):
+            _fields_ = [("cb", wintypes.DWORD), ("faults", wintypes.DWORD)] + [
+                (n, ctypes.c_size_t) for n in ("peak", "working", "peakPaged", "paged", "peakNonpaged", "nonpaged", "pagefile", "peakPagefile")]
+        open_process = ctypes.windll.kernel32.OpenProcess
+        open_process.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        open_process.restype = wintypes.HANDLE
+        close = ctypes.windll.kernel32.CloseHandle
+        close.argtypes = [wintypes.HANDLE]
+        handle = open_process(0x0400 | 0x0010, False, pid)
+        if not handle:
+            return 0
+        try:
+            c = Counters()
+            c.cb = ctypes.sizeof(c)
+            info = ctypes.windll.psapi.GetProcessMemoryInfo
+            info.argtypes = [wintypes.HANDLE, ctypes.POINTER(Counters), wintypes.DWORD]
+            info.restype = wintypes.BOOL
+            return c.working if info(handle, ctypes.byref(c), c.cb) else 0
+        finally:
+            close(handle)
+    try:
+        return int(Path(f"/proc/{pid}/statm").read_text().split()[1]) * os.sysconf("SC_PAGE_SIZE")
+    except (OSError, ValueError):
+        return 0
+
+
+def _run_bounded(cmd, *, stdout, stderr, timeout, check=False, **kwargs):
+    process = subprocess.Popen(cmd, stdout=stdout, stderr=stderr, **kwargs)
+    deadline = time.monotonic() + timeout
+    work = Path(cmd[cmd.index("--output-file") + 1]).parent
+    try:
+        while process.poll() is None:
+            if time.monotonic() >= deadline:
+                raise subprocess.TimeoutExpired(cmd, timeout)
+            if _rss(process.pid) > 2 * 1024**3:
+                raise ValueError("netconvert exceeded 2 GiB memory budget")
+            if os.fstat(stdout.fileno()).st_size > 16 * 1024**2:
+                raise ValueError("netconvert exceeded diagnostic log budget")
+            if sum(p.stat().st_size for p in work.iterdir() if p.is_file()) > 512 * 1024**2:
+                raise ValueError("netconvert exceeded 512 MiB temporary disk budget")
+            time.sleep(.05)
+        return process
+    finally:
+        if process.poll() is None:
+            process.kill()
+        process.wait()
 
 
 def executable():
@@ -55,7 +111,7 @@ def extract(source, bounds, target):
 
         def node(self, n):
             self.seen_nodes += 1
-            if self.seen_nodes > MAX_NODES * 4:
+            if self.seen_nodes > MAX_SOURCE_NODES:
                 raise ValueError("extract exceeds node budget; use a smaller complete extract")
 
         def way(self, w):
@@ -113,14 +169,16 @@ def extract(source, bounds, target):
             ET.SubElement(el, "nd", ref=str(nid))
         for k, v in sorted(w["tags"].items()):
             ET.SubElement(el, "tag", k=k, v=v)
-    kept, incomplete = 0, 0
+    kept, incomplete, conditional = 0, 0, 0
     for rid, tags, members in sorted(relations):
         way_members = [str(ref) for typ, ref, _ in members if typ == "w"]
         if not any(wid in ways for wid in way_members):
             continue
-        if not all(wid in ways for wid in way_members) or any(typ == "n" and ref not in needed for typ, ref, _ in members):
+        if not all(wid in ways for wid in way_members) or any(typ == "r" or (typ == "n" and ref not in needed) for typ, ref, _ in members):
             incomplete += 1
             continue
+        if any("conditional" in k for k in tags):
+            conditional += 1
         el = ET.SubElement(root, "relation", id=str(rid))
         for typ, ref, role in members:
             ET.SubElement(el, "member", type={"w": "way", "n": "node", "r": "relation"}[typ], ref=str(ref), role=role)
@@ -128,10 +186,11 @@ def extract(source, bounds, target):
             ET.SubElement(el, "tag", k=k, v=v)
         kept += 1
     ET.ElementTree(root).write(target, encoding="utf-8", xml_declaration=True)
-    return ways, {"restrictionRelations": kept, "incompleteRestrictions": incomplete}
+    return ways, {"restrictionRelations": kept, "incompleteRestrictions": incomplete, "conditionalRestrictions": conditional}
 
 
-def convert(osm, output, left_hand=False, timeout=90, runner=subprocess.run):
+def convert(osm, output, left_hand=False, timeout=90, runner=None):
+    runner = runner or _run_bounded
     cmd = [str(executable()), "--osm-files", str(osm), "--output-file", str(output),
            "--plain-output-prefix", str(output) + ".plain", "--proj.plain-geo", "true",
            "--osm.turn-lanes", "true", "--osm.lane-access", "true", "--osm.all-attributes", "true",
@@ -156,6 +215,13 @@ def convert(osm, output, left_hand=False, timeout=90, runner=subprocess.run):
 
 
 def read_network(path, ways):
+    try:
+        return _read_network(path, ways)
+    except (KeyError, TypeError, ET.ParseError, xml.sax.SAXParseException) as exc:
+        raise ValueError(f"invalid SUMO network output: {type(exc).__name__}: {exc}") from exc
+
+
+def _read_network(path, ways):
     import sumolib
     net = sumolib.net.readNet(str(path), withInternal=False)
     prefix = str(path) + ".plain"
@@ -251,16 +317,27 @@ def preprocess(source, directory, lat, lon, *, left_hand=False, timeout=90):
         result = Path(work) / "extract.json"
         worker = multiprocessing.get_context("spawn").Process(target=_extract_worker, args=(source, bounds, osm, result))
         worker.start()
-        worker.join(timeout)
+        deadline = time.monotonic() + timeout
+        exceeded = None
+        while worker.is_alive() and time.monotonic() < deadline:
+            if _rss(worker.pid) > 768 * 1024**2:
+                exceeded = "OSM extraction exceeded 768 MiB memory budget"
+                break
+            if sum(p.stat().st_size for p in Path(work).iterdir() if p.is_file()) > 512 * 1024**2:
+                exceeded = "OSM extraction exceeded 512 MiB temporary disk budget"
+                break
+            worker.join(.05)
         if worker.is_alive():
             worker.terminate()
             worker.join(5)
             if worker.is_alive():
                 worker.kill()
                 worker.join()
-            raise ValueError(f"OSM extraction timed out after {timeout}s")
+            raise ValueError(exceeded or f"OSM extraction timed out after {timeout}s")
         if worker.exitcode or not result.is_file():
             raise ValueError(f"OSM extraction failed ({worker.exitcode})")
+        if result.stat().st_size > MAX_OUTPUT:
+            raise ValueError("extracted full-tag payload exceeds region memory budget")
         payload = json.loads(result.read_text(encoding="utf-8"))
         if "error" in payload:
             raise ValueError(payload["error"])

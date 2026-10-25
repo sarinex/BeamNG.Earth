@@ -260,6 +260,10 @@ const settingsSchema = [
       { id: "roadGeometryBackend", type: "select", default: "legacy", name: "Road Geometry Generator", options: [
         { value: "legacy", label: "Legacy (Original)" }, { value: "geos", label: "GEOS + Earcut (Experimental)" }
       ], desc: "Rebuilds nearby pavement and sidewalks after stopping on terrain clear of curbs and bridges. Simulation is held while replacement meshes and collision load. Multiplayer changes wait until the session ends." },
+      { id: "roadIntelligenceBackend", type: "select", default: "legacy", name: "Road Intelligence", options: [
+        { value: "legacy", label: "Legacy (Original)" }, { value: "sumo", label: "SUMO (Experimental)" }
+      ], desc: "Rebuilds terrain, road surfaces, markings and the AI graph after stopping safely. SUMO uses prepared road data where available. Simulation is held until the rebuild completes." },
+      { id: "roadIntelligence", type: "info", name: "Road intelligence status", desc: "Requested, server-accepted and loaded intelligence; pending or failed rebuilds." },
       { id: "roadGeometry", type: "info", name: "Active road generator", desc: "Confirmed generator, pending rebuilds and server capability." },
     ],
   },
@@ -369,6 +373,7 @@ function fmt(v, digits) {
 function infoValue(item) {
   const s = status.value
   if (item.id === "connection") return connectionText.value
+  if (item.id === "roadIntelligence") return (s.roadIntelligence && s.roadIntelligence.text) || "Waiting for road intelligence status"
   if (item.id === "roadGeometry") return (s.roadGeometry && s.roadGeometry.text) || "Waiting for road generator status"
   if (item.id === "anchor") return s.anchorId ? `#${s.anchorId}  ${fmt(s.anchorLat, 5)}, ${fmt(s.anchorLon, 5)}` : "none"
   if (item.id === "player") return (typeof s.playerLat === "number") ? `${fmt(s.playerLat, 5)}, ${fmt(s.playerLon, 5)}  (${fmt(s.dist / 1000, 1)} km from origin)` : "-"

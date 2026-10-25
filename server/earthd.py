@@ -3133,6 +3133,7 @@ class Connection:
                 self.boost_t0 = time.monotonic()
                 self.s.load_boost(True, "teleport")
         anchor = self.s.new_anchor(lat, lon)
+        anchor.road_epoch = road_epoch
         from roadintel_ext.runtime import bind_anchor
         bind_anchor(self.s, anchor, dataset)
         self.status(f"Building terrain at {lat:.5f}, {lon:.5f}...")
@@ -3262,6 +3263,8 @@ class Connection:
             identity = self.road_geometry.dataset.identity if self.road_geometry.dataset is not None else None
             if getattr(anchor, "roadintel_identity", None) != identity:
                 return  # old terrain cannot complete a new intelligence epoch
+            if getattr(anchor, "road_epoch", 0) != self.road_geometry.epoch:
+                return  # even a previous Legacy anchor needs a fresh acknowledged rebuild
             self.road_geometry.awaiting_anchor = False
         old = self.s.anchors.get(self.active)
         if old is not None:

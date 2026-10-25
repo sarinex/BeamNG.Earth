@@ -156,6 +156,7 @@ function M.onMessage(msg, currentAnchor)
   local ok, g = pcall(jsonDecode, readFile(msg.path) or '')
   if not ok or type(g) ~= 'table' or type(g.nodes) ~= 'table' or type(g.edges) ~= 'table' then return false end
   graph = { anchor = msg.anchorId, serial = msg.serial, nodes = g.nodes, edges = g.edges,
+            roadIntelligence = g.roadIntelligence,
             signals = type(g.signals) == 'table' and g.signals or {}, rules = type(g.rules) == 'table' and g.rules or nil }
   dirty = true
   return true
@@ -208,7 +209,7 @@ local function signalData(nodes)
   local stop = nil
   local ns = 0
   for _, j in ipairs(graph.signals or {}) do
-    local jn = nodes[j.j]
+    local jn = nodes[j.controlNode or j.j]
     if jn and type(j.app) == 'table' then
       local apps = {}
       for _, a in ipairs(j.app) do if nodes[a[1]] then apps[#apps + 1] = a end end
@@ -615,8 +616,19 @@ end
 -- How many times a graph went into the game's map (gps.lua: the map's node table stays the same table across them).
 function M.applies() return stats.applies end
 
+function M.intelligenceSettled()
+  return graph ~= nil and applied ~= nil and graph.serial == applied.serial
+    and graph.anchor == applied.anchor and not dirty and not pendingSignals and not prep
+end
+
+function M.retireIntelligence()
+  M.onTeleport()
+  graph, applied, dirty, prep, pendingSignals = nil, nil, false, nil, nil
+end
+
 function M.status()
   return { graph = graph and graph.serial or nil, applies = stats.applies, lastMs = stats.lastMs,
+           roadIntelligence = graph and graph.roadIntelligence or nil,
            nodes = stats.nodes, edges = stats.edges, junctions = stats.junctions, started = started,
            cuts = stats.cuts, cutRespawns = stats.cutRespawns,
            resetMs = stats.resetMs, signalsMs = stats.signalsMs, nodesMs = stats.nodesMs, gpsMs = stats.gpsMs,

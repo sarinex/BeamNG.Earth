@@ -447,6 +447,10 @@ local function finishRebase()
   local msg, tr, xf = rb.msg, rb.terrain, rb.xf
   st.recouple = rebase.recoupleStart(rb.couplings, st.clock)   -- (trailers hitched again: rebase.lua)
   local ok, err = loadBlock(tr)
+  if not ok and rb.purpose == 'roadintel' then
+    roadgeom.terrainFailed(err or 'terrain import failed')
+    return false
+  end
   -- the world shifts under the grass: made fresh (with tools/gcpatch the engine would keep it)
   groundcover.rebuild()
   if not ok then log('E', 'beamngEarth', 'rebase terrain import failed: ' .. tostring(err)) end
@@ -474,6 +478,7 @@ local function finishRebase()
   setStatus(string.format('Anchor #%s at %.5f, %.5f (%s, %.0f ms, %.3f deg, phase 2 after %d frame(s), camera: %d points%s)%s',
     tostring(msg.anchorId), msg.lat, msg.lon, rb.purpose, st.lastRebaseMs, math.deg(xf:angle()), rb.waited,
     cs.points + cs.triples, cs.viaDebug and '' or ', no camData', ok and '' or ' TERRAIN FAILED'))
+  return ok
 end
 
 -- Is the player's move visible to GE yet (veh:getPosition, the value the camera reads at
@@ -531,7 +536,7 @@ local function commitRebase(msg, purpose)
     st.lagProbe = nil -- applied synchronously: no lag at all
     st.rebasing.wait = 0
   end
-  if st.rebasing.wait <= 0 then finishRebase() end
+  if st.rebasing.wait <= 0 then return finishRebase() end
   return true
 end
 
@@ -660,8 +665,9 @@ local function onMessage(msg)
     trees.clear()
     setStatus('Disconnected from companion server: ' .. tostring(msg.error))
   elseif t == 'hello' then
-    local restoreBackend = roadgeom.hello(msg.roadGeometry, settings.get('roadGeometryBackend'))
+    local restoreBackend = roadgeom.hello(msg.roadGeometry, settings.get('roadGeometryBackend'), settings.get('roadIntelligenceBackend'))
     if restoreBackend then settings.set('roadGeometryBackend', restoreBackend) end
+    if not (msg.roadGeometry and msg.roadGeometry.coordinatedTerrain) then settings.set('roadIntelligenceBackend', 'legacy') end
     st.sessionId = msg.sessionId
     st.refreshLater = nil       -- (a restarted server numbers its anchors from 1 again)
     roads.setSession(msg.sessionId)   -- the road / building tiles' pooled shape files belong to this server
@@ -752,6 +758,15 @@ local function onMessage(msg)
   elseif t == 'anchor_ready' then
     local p = st.pending
     if not p or msg.requestId ~= p.requestId then return end -- stale answer
+    if p.purpose == 'roadintel' then
+      st.pending = nil
+      if not roadgeom.terrainAccept(msg) then return end
+      if not st.anchor or msg.lat ~= st.anchor.lat or msg.lon ~= st.anchor.lon then
+        roadgeom.terrainFailed('origin changed during intelligence rebuild')
+      elseif commitAnchor(msg, 'roadintel') then roadgeom.terrainLoaded()
+      else roadgeom.terrainFailed('terrain import failed') end
+      return
+    end
     if p.purpose == 'rebase' or (p.purpose == 'resync' and st.anchor) then
       p.ready, p.msg = true, msg -- committed in updateWorld() (distance rule / when not paused)
       if p.purpose == 'rebase' and p.sentAt then st.anchorLatency = st.clock - p.sentAt end
@@ -762,6 +777,7 @@ local function onMessage(msg)
   elseif t == 'anchor_error' then
     local p = st.pending
     if not p or msg.requestId ~= p.requestId then return end
+    if p.purpose == 'roadintel' then roadgeom.terrainFailed(msg.error) end
     st.pending = nil
     st.retryAt = st.clock + rebase.RETRY_S
     setStatus('Anchor request failed: ' .. tostring(msg.error))
@@ -800,7 +816,14 @@ local function onMessage(msg)
   elseif t == 'roads_drop' then
     if roadgeom.accept(msg) then roads.onDrop(msg) end
   elseif t == 'road_geometry_state' then
-    local restoreBackend = roadgeom.state(msg, roads.retireGeometry)
+    local restoreBackend = roadgeom.state(msg, function(state)
+      roads.retireGeometry()
+      navgraph.retireIntelligence()
+      if state.terrainRebuild then
+        if st.anchor then requestAnchor(st.anchor.lat, st.anchor.lon, 'roadintel', resyncHint())
+        else roadgeom.terrainFailed('no loaded anchor') end
+      end
+    end)
     if restoreBackend then settings.set('roadGeometryBackend', restoreBackend) end
   elseif t == 'far_tile' then
     farfield.onTile(msg)
@@ -868,7 +891,7 @@ local function onMessage(msg)
     -- a world map tile file is written (settings.mapTiles: the map polls every 250 ms while it misses tiles)
   elseif t == 'navgraph' then
     -- the AI road graph around the player (server navgraph.py, --traffic on): map.reset (navgraph.lua)
-    navgraph.onMessage(msg, st.anchorId)
+    if roadgeom.navigation(msg) then navgraph.onMessage(msg, st.anchorId) end
   elseif t == 'sea' then
     -- the sea's water tiles near the player (server seatiles.py, --sea on): sea.lua
     sea.onMessage(msg)
@@ -1744,7 +1767,12 @@ local function onUpdate(dtReal, dtSim)
       roadgeom.update(dtReal, {connected = net.isConnected(), speed = st.player and st.player.speed or math.huge,
         safe = M.roadGeometrySafe,
         multiplayer = simhold.mpSession(), paused = simPaused, pause = simPause, roads = roads, send = net.send,
-        settled = roads.geometrySettled})
+        settled = function()
+          local far = farfield.stats()
+          return roads.geometrySettled() and (not roadgeom.requiresNavigation() or navgraph.intelligenceSettled())
+            and (not roadgeom.requiresTerrainSettlement() or
+              (far.done and far.queued == 0 and far.groups == 0 and far.transitions == 0 and far.deleting == 0 and far.old == 0))
+        end})
     end
     roads.update(gov, st.anchorId, st.player, M.viewAway())
     t = mark('roads', t)
@@ -2190,6 +2218,11 @@ end
 
 function M._state() return st end -- read-only: the dev tools and the settings page
 function M.roadGeometryState() return roadgeom.status() end -- structured state; status() is a console dump string
+function M.roadIntelligenceState()
+  local state = roadgeom.intelligenceStatus()
+  state.navigation = navgraph.status().roadIntelligence
+  return state
+end
 function M.roadGeometrySafe()
   if not roads.enabled then return false, 'turn Roads on before changing the generator' end
   if dropHold.active then return false, 'waiting for the vehicle ground to load' end
@@ -2207,6 +2240,10 @@ end
 
 function M.setRoadGeometry(value)
   if not roadgeom.request(value) and value ~= 'legacy' then settings.set('roadGeometryBackend', 'legacy') end
+end
+
+function M.setRoadIntelligence(value)
+  if not roadgeom.requestIntelligence(value) then settings.set('roadIntelligenceBackend', 'legacy') end
 end
 
 M.onUpdate = onUpdate

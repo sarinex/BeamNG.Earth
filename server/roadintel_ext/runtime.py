@@ -9,11 +9,24 @@ import os
 from pathlib import Path
 import threading
 from functools import wraps
+import weakref
 
 import numpy as np
 
 from . import VERSION
 from .sumo import MAX_OUTPUT, region
+
+_datasets = weakref.WeakValueDictionary()
+
+
+def open_dataset(directory):
+    candidate = Dataset(directory)
+    key = (str(candidate.directory), candidate.identity)
+    previous = _datasets.get(key)
+    if previous is not None:
+        return previous
+    _datasets[key] = candidate
+    return candidate
 
 
 def project(points, line):
@@ -166,6 +179,9 @@ def effective_specs(feats, specs):
         try:
             section = normalize(record["tags"], spec, reverse=record["reverse"],
                                 left_hand=record["region"]["leftHand"], provenance=record["provenance"])
+            import roads
+            if spec.median and section.envelope_width > roads.dual_cap(spec.median, section.envelope_width) + .05:
+                raise ValueError("mapped section overlaps the adjacent carriageway; source geometry/width conflict")
             for eid, native in record["region"].get("edges", {}).items():
                 if native["way"] != record.get("way"):
                     continue
@@ -175,7 +191,23 @@ def effective_specs(feats, specs):
                 expected = section.forward if forward else section.backward
                 if native["lanes"] != expected:
                     raise ValueError("SUMO passenger lanes disagree with mapped section (reserved lanes or lane transition)")
-            import roads
+            from .navigation import endpoint
+            ll = np.asarray(feats.parts(i)[0][0], float)
+            glyphs = {"left": "l", "through": "s", "right": "r"}
+            def arrow_ok(turns, end, adjacent):
+                if not turns:
+                    return False
+                diagnostic = record["region"].get("diagnostics", {})
+                if diagnostic.get("incompleteRestrictions") or diagnostic.get("conditionalRestrictions"):
+                    return False
+                try:
+                    eid, _ = endpoint(record, ll[end], True, ll[adjacent])
+                except (ValueError, KeyError):
+                    return False
+                allowed = {c["dir"] for c in record["region"].get("connections", []) if c["from"] == eid}
+                return all(glyphs.get(m) in allowed for lane in turns for m in lane)
+            section = replace(section, arrows_forward=arrow_ok(section.turns_forward, -1, -2),
+                              arrows_backward=arrow_ok(section.turns_backward, 0, 1))
             raw_speed = record["tags"].get("maxspeed", "")
             try:
                 speed = float(raw_speed[:-3].strip()) * 1.609344 if raw_speed.endswith("mph") else float(raw_speed)
@@ -222,7 +254,13 @@ def bind_anchor(server, anchor, dataset):
         return
     view = copy.copy(server)
     view._roadintel_root = server
-    view.mapdata = MapView(server.mapdata, dataset, server.left_hand(anchor))
+    maps = getattr(server, "_roadintel_maps", None)
+    if maps is None:
+        maps = server._roadintel_maps = weakref.WeakValueDictionary()
+    key = (dataset.identity, bool(server.left_hand(anchor)))
+    view.mapdata = maps.get(key)
+    if view.mapdata is None:
+        view.mapdata = maps[key] = MapView(server.mapdata, dataset, key[1])
     view.block_pools, view.road_pool, view.far_pool, view.far_bld_pool = [], None, None, None
     view.surface = copy.copy(server.surface) if server.surface is not None else None
     if view.surface is not None:

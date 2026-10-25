@@ -2,8 +2,8 @@
 
 BeamNG links express directional lane counts, speed and drivability. They have no
 lane-to-lane turn mask. Separate directed approach portals express road-level
-turn restrictions; SUMO lane connections stay diagnostic. Controlled junctions
-retain upstream signal links until that engine signal contract can be validated.
+turn restrictions; SUMO lane connections stay diagnostic. Upstream signal/stop
+positions and controllers are retained, with graph references remapped to portals.
 """
 import hashlib
 import math
@@ -65,13 +65,11 @@ def apply(graph, frame, edge_records):
         for name in e[:2]:
             if name.startswith("c"):
                 junctions.setdefault(name, []).append(e)
-    controlled = {s["j"] for s in graph["signals"]}
+    controlled = {s["j"]: s for s in graph["signals"]}
     plans, diagnostics = {}, {"sumoJunctions": [], "fallbackJunctions": {}, "laneConnections": 0,
                               "laneTurnMasksEnforced": False}
     for junction, incident in sorted(junctions.items()):
         try:
-            if junction in controlled:
-                raise ValueError("upstream traffic-signal/stop contract retained")
             if len(incident) < 2:
                 raise ValueError("incomplete junction context")
             la, lo, _ = frame.enu_to_geodetic(*nodes[junction][:3])
@@ -95,9 +93,13 @@ def apply(graph, frame, edge_records):
                 raise ValueError("incident arms disagree on SUMO junction or region revision")
             if len({(id(a[0]), a[1]) for a in arms}) != len(arms):
                 raise ValueError("duplicate approach mapping")
+            if junction in controlled:
+                for app in controlled[junction]["app"]:
+                    if not any(a[1] and (a[0][1] if a[0][0] == junction else a[0][0]) == app[0] for a in arms):
+                        raise ValueError("upstream signal approach cannot be matched to a SUMO portal")
             # Boundary restrictions may be incomplete: never claim these are authoritative.
-            if any(a[5]["diagnostics"].get("incompleteRestrictions") for a in arms):
-                raise ValueError("extract contains incomplete turn restrictions")
+            if any(a[5]["diagnostics"].get("incompleteRestrictions") or a[5]["diagnostics"].get("conditionalRestrictions") for a in arms):
+                raise ValueError("extract contains incomplete or conditional turn restrictions")
             plans[junction] = arms
             diagnostics["sumoJunctions"].append(junction)
         except (ValueError, KeyError, TypeError) as exc:
@@ -145,5 +147,13 @@ def apply(graph, frame, edge_records):
     result.extend(turns)
     used = {n for e in result for n in e[:2]}
     graph["edges"], graph["nodes"] = result, {k: v for k, v in nodes.items() if k in used}
+    for signal in graph["signals"]:
+        arms = plans.get(signal["j"])
+        if not arms:
+            continue
+        incoming = [a for a in arms if a[1]]
+        signal["controlNode"] = incoming[0][3]
+        for app in signal["app"]:
+            app[0] = next(a[3] for a in incoming if (a[0][1] if a[0][0] == signal["j"] else a[0][0]) == app[0])
     graph["roadIntelligence"] = diagnostics
     return graph

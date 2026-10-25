@@ -28,6 +28,35 @@ def spec(width=10):
 
 
 class Layout(unittest.TestCase):
+    def test_mapped_directional_complement_and_width_conflicts(self):
+        s = normalize({"lanes": "5", "lanes:forward": "2", "width": "16"}, spec())
+        self.assertEqual((s.forward, s.backward), (2, 3))
+        for width in ("unknown", "7;9", "0", "100"):
+            with self.subTest(width=width), self.assertRaises(ValueError):
+                normalize({"lanes": "2", "width": width}, spec())
+        with self.assertRaisesRegex(ValueError, "conflict"):
+            normalize({"oneway": "yes", "lanes": "2", "width": "8", "width:lanes": "3|3"}, spec())
+
+    def test_sidewalks_and_asymmetric_parking_follow_feature_reversal(self):
+        tags = {"lanes": "2", "width": "9", "sidewalk": "left", "parking:right": "lane", "parking:right:width": "2"}
+        a = normalize(tags, spec(), reverse=True)
+        self.assertEqual((a.sidewalk_sides, a.parking_left, a.parking_right), ((-1,), 2, 0))
+        sp = spec()._replace(intel=a)
+        self.assertTrue(roads.has_sidewalks(sp))
+        self.assertEqual(roads.walk_sides(sp), (-1,))
+        b = normalize(dict(tags, sidewalk="no"), spec())
+        self.assertFalse(roads.has_sidewalks(spec()._replace(intel=b)))
+
+    def test_arrows_are_source_gated_stock_ribbons(self):
+        from roadintel_ext.arrows import ribbons
+        s = normalize({"lanes": "2", "oneway": "yes", "turn:lanes": "left|through;right"}, spec())
+        pts = np.array([[0., 0., 0.], [100., 0., 0.]])
+        self.assertEqual(ribbons(s, pts), [])
+        rows = ribbons(replace(s, arrows_forward=True), pts)
+        self.assertGreater(len(rows), 5)
+        self.assertTrue(all(row[0]["m"] == "line_white" for row in rows))
+        self.assertTrue(all(np.isfinite(row[2]).all() for row in rows))
+        self.assertEqual(ribbons(replace(s, arrows_forward=True), pts * .1), [])
     def test_asymmetric_counts_widths_and_markings(self):
         s = normalize({"lanes": "3", "lanes:forward": "2", "lanes:backward": "1", "width": "9"}, spec())
         self.assertEqual((s.forward, s.backward, s.centre), (2, 1, 1.5))
@@ -91,6 +120,130 @@ class Layout(unittest.TestCase):
 
 
 class NativeSUMO(unittest.TestCase):
+    def test_pbf_full_tag_input(self):
+        import osmium
+        with tempfile.TemporaryDirectory() as work:
+            xml, pbf, cache = Path(work) / "fixture.osm.xml", Path(work) / "fixture.osm.pbf", Path(work) / "cache"
+            f = network(xml)
+            xml.write_text(xml.read_text().replace('k="width" v="9.9"', 'k="width" v="9.9" /><tag k="cycleway:right" v="separate"'))
+            with osmium.SimpleWriter(str(pbf)) as writer:
+                class Copy(osmium.SimpleHandler):
+                    def node(self, n): writer.add_node(n)
+                    def way(self, w): writer.add_way(w)
+                    def relation(self, r): writer.add_relation(r)
+                Copy().apply_file(str(xml))
+            path, _ = preprocess(pbf, cache, 39.2834, -76.5934)
+            data = json.loads(path.read_text())
+            self.assertEqual(data["ways"]["10"]["tags"]["cycleway:right"], "separate")
+            self.assertEqual(data["diagnostics"]["restrictionRelations"], 1)
+    def test_bounded_subprocess_is_killed_on_memory_limit(self):
+        from roadintel_ext.sumo import _run_bounded
+        from unittest.mock import Mock
+        process = Mock(pid=123)
+        process.poll.return_value = None
+        with tempfile.TemporaryDirectory() as work, tempfile.TemporaryFile() as log:
+            with patch("roadintel_ext.sumo.subprocess.Popen", return_value=process), patch("roadintel_ext.sumo._rss", return_value=3*1024**3):
+                with self.assertRaisesRegex(ValueError, "memory budget"):
+                    _run_bounded(["netconvert", "--output-file", str(Path(work) / "n.xml")], stdout=log, stderr=-2, timeout=90)
+        process.kill.assert_called_once()
+        process.wait.assert_called_once()
+
+    def test_incomplete_relation_and_invalid_network_report_failure(self):
+        from roadintel_ext.sumo import read_network
+        with tempfile.TemporaryDirectory() as work:
+            source, cache = Path(work) / "fixture.osm.xml", Path(work) / "cache"
+            f = network(source)
+            source.write_text(source.read_text().replace('type="way" ref="21" role="to"', 'type="way" ref="999" role="to"'))
+            preprocess(source, cache, 39.2834, -76.5934)
+            ds = Dataset(cache)
+            f._roadintel = [ds.match(f, i) for i in range(len(f))]
+            g = navgraph.build(FRAME, [f], flat, (120, 120))
+            self.assertIn("incomplete", g["roadIntelligence"]["fallbackJunctions"]["c2"])
+            invalid = Path(work) / "invalid.net.xml"
+            invalid.write_text("<net>")
+            import xml.sax
+            import xml.etree.ElementTree as ET
+            with self.assertRaises((xml.sax.SAXParseException, ET.ParseError, ValueError, RuntimeError)):
+                read_network(invalid, {})
+
+
+class Installation(unittest.TestCase):
+    def test_pins_source_package_and_legacy_import_independence(self):
+        import ast
+        import importlib.util
+        root = Path(__file__).resolve().parents[2]
+        pins = (root / "server/requirements-roadintel-ext.txt").read_text()
+        for package in ("eclipse-sumo==1.28.0", "sumolib==1.28.0", "osmium==4.3.2"):
+            self.assertIn(package, pins)
+        for path in (root / "server/roadintel_ext").glob("*.py"):
+            ast.parse(path.read_text(), feature_version=(3, 10))
+        result = subprocess.run([sys.executable, "-c", "import roads,sys; assert 'sumo' not in sys.modules; assert 'sumolib' not in sys.modules; assert 'osmium' not in sys.modules"],
+                                cwd=root / "server", capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        module_spec = importlib.util.spec_from_file_location("roadintel_package", root / "tools/package.py")
+        module = importlib.util.module_from_spec(module_spec)
+        module_spec.loader.exec_module(module)
+        files = module.collect()
+        for name in ("server/roadintel_ext/runtime.py", "server/requirements-roadintel-ext.txt", "tools/prepare_roadintel.py", "docs/ROADINTEL_EVALUATION.md"):
+            self.assertIn(name, files)
+
+
+class NativeNetworkContracts(unittest.TestCase):
+    def test_cache_update_pins_old_snapshot_and_corruption_falls_back(self):
+        with tempfile.TemporaryDirectory() as work:
+            source, cache = Path(work) / "fixture.osm.xml", Path(work) / "cache"
+            f = network(source)
+            first, _ = preprocess(source, cache, 39.2834, -76.5934)
+            old = Dataset(cache)
+            before = old.match(f, 0)
+            source.write_text(source.read_text().replace('v="9.9"', 'v="10.2"'))
+            second, _ = preprocess(source, cache, 39.2834, -76.5934)
+            self.assertNotEqual(first, second)
+            new = Dataset(cache)
+            self.assertNotEqual(old.identity, new.identity)
+            self.assertEqual(old.match(f, 0)["tags"]["width"], "9.9")
+            self.assertEqual(new.match(f, 0)["tags"]["width"], "10.2")
+            # SHA verification happens before parsing a fresh payload.
+            second.write_text(second.read_text() + " ")
+            broken = Dataset(cache)
+            view = MapView(SimpleNamespace(cell=lambda *a, **kw: SimpleNamespace(layers={"roads": f})), broken)
+            clone = view.cell(None).layers["roads"]
+            self.assertIn("checksum", clone._roadintel[0]["error"])
+            self.assertEqual(roads.road_specs(clone)[0].width, roads.road_specs(f)[0].width)
+
+    def test_stable_junction_ids_after_frame_rebase_and_duplicate_cells(self):
+        import geodesy
+        with tempfile.TemporaryDirectory() as work:
+            source, cache = Path(work) / "fixture.osm.xml", Path(work) / "cache"
+            f = network(source)
+            preprocess(source, cache, 39.2834, -76.5934)
+            data = Dataset(cache)
+            f._roadintel = [data.match(f, i) for i in range(len(f))]
+            a = navgraph.build(FRAME, [f], flat, (0, 0))
+            other = geodesy.EnuFrame(39.284, -76.594)
+            b = navgraph.build(other, [f, f], flat, (0, 0))
+            self.assertEqual({n for n in a["nodes"] if n.startswith("ri")}, {n for n in b["nodes"] if n.startswith("ri")})
+
+    def test_ambiguous_spatial_matching_rejected(self):
+        with tempfile.TemporaryDirectory() as work:
+            source, cache = Path(work) / "fixture.osm.xml", Path(work) / "cache"
+            f = network(source)
+            preprocess(source, cache, 39.2834, -76.5934)
+            f.lonlat[:, 1] += .001
+            with self.assertRaisesRegex(ValueError, "does not match"):
+                Dataset(cache).match(f, 0)
+
+    def test_conditional_restrictions_explicitly_fall_back(self):
+        with tempfile.TemporaryDirectory() as work:
+            source, cache = Path(work) / "fixture.osm.xml", Path(work) / "cache"
+            f = network(source)
+            source.write_text(source.read_text().replace('</relation>', '<tag k="restriction:conditional" v="no_left_turn @ (Mo-Fr 08:00-16:00)" /></relation>'))
+            preprocess(source, cache, 39.2834, -76.5934)
+            data = Dataset(cache)
+            f._roadintel = [data.match(f, i) for i in range(len(f))]
+            g = navgraph.build(FRAME, [f], flat, (0, 0))
+            self.assertIn("conditional", g["roadIntelligence"]["fallbackJunctions"]["c2"])
+            self.assertIn("c2", g["nodes"])
     def test_real_import_restriction_cache_and_graph(self):
         with tempfile.TemporaryDirectory() as work:
             source = Path(work) / "fixture.osm.xml"
@@ -112,6 +265,12 @@ class NativeSUMO(unittest.TestCase):
             self.assertNotIn("c2", graph["nodes"])
             self.assertTrue(all(e[2] == 1 for e in graph["edges"] if any(n.startswith("ri") for n in e[:2])))
             self.assertEqual(graph, navgraph.build(FRAME, [f, f], flat, (120, 120)))
+            city = navgraph.build(FRAME, [f], flat, (120, 120), urban_fn=lambda la, lo: np.ones(np.shape(la), bool))
+            self.assertTrue(city["signals"], "urban fixture exercises existing stop/signal controllers")
+            self.assertIn("c2", city["roadIntelligence"]["sumoJunctions"])
+            for signal in city["signals"]:
+                self.assertIn(signal["controlNode"], city["nodes"])
+                self.assertTrue(all(app[0] in city["nodes"] for app in signal["app"]))
             self.assertGreater(dataset.stats["hits"], 0)
             self.assertIsNone(roads.road_specs(feats)[0].intel)
 
@@ -120,7 +279,7 @@ class NativeSUMO(unittest.TestCase):
             for left_hand in (False, True):
                 with self.subTest(kind=kind, left_hand=left_hand), tempfile.TemporaryDirectory() as work:
                     source = Path(work) / "fixture.osm.xml"
-                    f = network(source, kind, restriction=False)
+                    f = network(source, kind, restriction=False, left_hand=left_hand)
                     path, _ = preprocess(source, Path(work) / "cache", 39.2834, -76.5934, left_hand=left_hand)
                     data = json.loads(path.read_text())
                     f._roadintel = [Dataset(Path(work) / "cache").match(f, i, left_hand) for i in range(len(f))]
@@ -153,6 +312,29 @@ class NativeSUMO(unittest.TestCase):
 
 
 class CoordinatedTerrain(unittest.TestCase):
+    def test_server_rejects_old_legacy_anchor_during_rollback(self):
+        from earthd import Connection
+        selection = SimpleNamespace(awaiting_anchor=True, dataset=None, epoch=4)
+        old = SimpleNamespace(road_epoch=0)
+        conn = SimpleNamespace(active=3, teleport_pending=False, road_geometry=selection,
+                               s=SimpleNamespace(anchors={1: old}))
+        Connection.commit_anchor(conn, 1)
+        self.assertTrue(selection.awaiting_anchor)
+        self.assertEqual(conn.active, 3)
+
+    def test_retry_cannot_remove_server_terrain_barrier(self):
+        from roadgeom_ext.streaming import Selection
+        selected = Selection()
+        selected.awaiting_anchor = True
+        sent = []
+        conn = SimpleNamespace(roads=selected.tracker(), send=sent.append)
+        selected.select(conn, {"version": 1, "backend": "legacy", "speed": 0})
+        self.assertTrue(sent[-1]["ok"])
+        self.assertTrue(sent[-1]["terrainRebuild"])
+        self.assertTrue(selected.awaiting_anchor)
+        selected.select(conn, {"version": 1, "backend": "legacy", "speed": 0, "rebuildTerrain": "false"})
+        self.assertFalse(sent[-1]["ok"])
+
     def test_fresh_anchor_rebuilds_grading_masks_meshes_and_graph_without_mutating_legacy(self):
         import asyncio
         from PIL import Image

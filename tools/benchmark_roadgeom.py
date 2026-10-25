@@ -62,11 +62,11 @@ def fixtures():
     }
 
 
-def tile(feats, backend, out):
+def tile(feats, backend, out, left_hand=False):
     start = time.perf_counter()
     walks, diagnostics = [], {} if backend == 'geos' else None
     chunks = roads.build_tile(FRAME, 0, 0, [feats], flat, lambda la, lo: np.ones(np.shape(la), bool),
-                              walks=walks, backend=backend, diagnostics=diagnostics)
+                              walks=walks, backend=backend, diagnostics=diagnostics, left_hand=left_hand)
     mesh = roadgeom_ext.build_mesh(backend, FRAME, chunks, flat, (0, 0, 0),
                                    clip=roads.tile_bbox(0, 0), follow=True, q=1/32, diagnostics=diagnostics)
     roadgeom_ext.write_tile(out, '/temp/benchmark', 1, 0, 0, chunks, walks, mesh,

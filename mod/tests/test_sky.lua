@@ -1,6 +1,7 @@
 -- Offline tests for beamngEarth/sky.lua: the pure parts, then the switch to manual when someone else
 -- changes the time (against stubs.lua). Run: cd mod/tests && luajit test_sky.lua
-package.path = '../beamng_earth/lua/ge/extensions/?.lua;' .. package.path
+local dir = (arg[0]:match('^(.*)[/\\]') or '.')
+package.path = dir .. '/../beamng_earth/lua/ge/extensions/?.lua;' .. package.path
 local sky = require('beamngEarth/sky')
 
 local pass, fail = 0, 0
@@ -96,7 +97,7 @@ check(tk({ latitude = 1, longitude = 2, celestialProfile = 'x', cloudCover = 2 }
 ------------------------------------------------------------------------------------------
 -- runtime (stubs.lua): our level, a TimeOfDay, the real clock under the test's control
 
-local S = dofile('stubs.lua')
+local S = dofile(dir .. '/stubs.lua')
 local now = epoch + 15 * 3600 -- 2026-10-10 18:20 UTC, 14:20 in Baltimore
 os.time = function() return now end
 local tod = S.newObject('TimeOfDay'); tod:registerObject('tod')

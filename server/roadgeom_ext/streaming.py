@@ -114,16 +114,18 @@ class Selection:
         requested = msg.get("backend")
         intelligence = msg.get("intelligence", self.intelligence)
         dataset = self.dataset
-        terrain_rebuild = intelligence != self.intelligence or bool(msg.get("rebuildTerrain"))
+        terrain_rebuild = intelligence != self.intelligence or self.awaiting_anchor or bool(msg.get("rebuildTerrain"))
         request_id = msg.get("requestId")
         valid_id = isinstance(request_id, int) and not isinstance(request_id, bool) and 0 < request_id < 2**53
         try:
             validate(requested)
+            if "rebuildTerrain" in msg and not isinstance(msg["rebuildTerrain"], bool):
+                raise ValueError("rebuildTerrain must be a boolean")
             if intelligence not in ("legacy", "sumo"):
                 raise ValueError("road intelligence backend must be legacy or sumo")
             if intelligence == "sumo" and (terrain_rebuild or dataset is None):
-                from roadintel_ext.runtime import Dataset
-                dataset = Dataset(os.environ.get("BNGE_ROADINTEL_DIR", ""))
+                from roadintel_ext.runtime import open_dataset
+                dataset = open_dataset(os.environ.get("BNGE_ROADINTEL_DIR", ""))
             elif intelligence == "legacy":
                 dataset = None
             if request_id is not None and not valid_id:
