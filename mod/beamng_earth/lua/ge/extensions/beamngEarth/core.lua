@@ -1742,7 +1742,7 @@ local function onUpdate(dtReal, dtSim)
     -- came after it had passed (Brasov, Sinaia 2026-10-15: the car drove bare ground)
     if roadgeom.needsUpdate() then
       roadgeom.update(dtReal, {connected = net.isConnected(), speed = st.player and st.player.speed or math.huge,
-        safe = function() return roads.enabled and roads.geometrySafe() and not dropHold.active and not st.terrainPending end,
+        safe = M.roadGeometrySafe,
         multiplayer = simhold.mpSession(), paused = simPaused, pause = simPause, roads = roads, send = net.send,
         settled = roads.geometrySettled})
     end
@@ -2190,6 +2190,13 @@ end
 
 function M._state() return st end -- read-only: the dev tools and the settings page
 function M.roadGeometryState() return roadgeom.status() end -- structured state; status() is a console dump string
+function M.roadGeometrySafe()
+  if not roads.enabled then return false, 'turn Roads on before changing the generator' end
+  if dropHold.active then return false, 'waiting for the vehicle ground to load' end
+  if st.terrainPending then return false, 'waiting for the terrain update to finish' end
+  if st.resync or st.rebasing then return false, 'waiting for the world origin to settle' end
+  return roads.geometrySafe(guardBox())
+end
 function M._rebaseLag() return rebaseLag end -- for tests
 function M._governor() return gov end
 

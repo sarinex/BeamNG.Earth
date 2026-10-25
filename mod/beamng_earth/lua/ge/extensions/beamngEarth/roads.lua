@@ -547,24 +547,30 @@ function M.geometrySettled()
   return #createQ == 0 and #walkQ == 0 and #deleteQ == 0 and #held == 0 and not collisionDirty and not lastError
 end
 
-function M.geometrySafe()
+function M.geometrySafe(groundBox)
   for _, t in pairs(tiles) do
     for what, boxes in pairs(t.colliders or {}) do
-      if playerIn(boxes, what) then return false end
       -- A car ON a bridge also needs its old deck continuously: wait until it is back on terrain.
-      if what == 'deck' or what == 'tunnel' then
-        local veh = getPlayerVehicle and getPlayerVehicle(0)
-        local p = veh and veh:getPosition()
-        if p then
-          for _, b in ipairs(boxes) do
-            if p.x >= b[1] - 3 and p.x <= b[4] + 3 and p.y >= b[2] - 3 and p.y <= b[5] + 3
-                and p.z >= b[3] - 3 and p.z <= b[6] + 3 then return false end
+      if (what == 'deck' or what == 'tunnel') and not t.ghost then
+        local object=t[what] and scenetree.findObjectById(t[what])
+        if object and isCollider(object) then
+          local veh = getPlayerVehicle and getPlayerVehicle(0)
+          local p = veh and veh:getPosition()
+          if p then
+            for _, b in ipairs(boxes) do
+              if p.x >= b[1] - 3 and p.x <= b[4] + 3 and p.y >= b[2] - 3 and p.y <= b[5] + 3
+                  and p.z >= b[3] - 3 and p.z <= b[6] + 3 then return false, 'move clear of the bridge or tunnel onto terrain' end
+            end
           end
         end
       end
     end
   end
-  return true
+  if M.swapQuiet() then
+    require('beamngEarth/roadgeom_safety').invalidate()
+    return false, 'waiting for terrain collision to settle'
+  end
+  return require('beamngEarth/roadgeom_safety').current(groundBox,M.reloads())
 end
 
 -- Origin rebase (core.lua finishRebase): the shown tiles move into the new frame (p_new = R*p + t: their TSStatics

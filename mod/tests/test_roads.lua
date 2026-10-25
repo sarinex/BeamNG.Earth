@@ -257,6 +257,13 @@ T.check(#statics() == 1 and shapes[1] == '/t/walks_2_8_8.cdae', 'the drawn sidew
 car.pos = vec3(200, 105, 0.5)
 roads.update(gov, 2)
 T.check(#statics() == 2, 'the collision mesh once the car is clear')
+-- Switching checks actual terrain support, independently of the padded streaming spawn boxes.
+local support = require('beamngEarth/roadgeom_safety')
+local originalSupport = support.current
+support.current = function() return true end -- terrain support is covered by test_roadgeom_safety
+car.pos = vec3(122, 105, 0.5) -- outside the sidewalk, inside its 3 m streaming buffer
+T.check(roads.geometrySafe(), 'nearby loaded sidewalk does not veto independently verified terrain support')
+support.current = originalSupport
 roads.onDrop({ anchorId = 2, key = '0_0' })
 roads.update(gov, 2)
 -- colliders only near the car: a far tile's sidewalk waits, made as the car comes near, dropped far behind

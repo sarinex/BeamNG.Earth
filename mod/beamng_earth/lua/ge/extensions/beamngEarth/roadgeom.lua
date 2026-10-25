@@ -169,11 +169,11 @@ function M.update(dt, ctx)
     return
   end
   if ctx.multiplayer then release(ctx); text = 'Pending ' .. pending .. ': leave the multiplayer session to rebuild safely'; return end
-  local safe = ctx.safe
-  if type(safe) == 'function' then safe = safe() end
-  if not safe then text = 'Pending ' .. pending .. ': stop on terrain, clear of bridges, tunnels and curbs'; return end
   still = ctx.speed <= 0.25 and (still + dt) or 0
-  if still < 1 then return end
+  if still < 1 then text = 'Pending ' .. pending .. ': stop the vehicle to rebuild roads'; return end
+  local safe, reason = ctx.safe, nil
+  if type(safe) == 'function' then safe, reason = safe() end
+  if not safe then text = 'Pending ' .. pending .. ': ' .. (reason or 'stop on terrain, clear of bridges, tunnels and curbs'); return end
   if not held then wasPaused, held = ctx.paused(), true; ctx.pause(true) end
   ctx.roads.setHold(true)
   phase, elapsed, failure, serverKnown = 'request', 0, nil, false

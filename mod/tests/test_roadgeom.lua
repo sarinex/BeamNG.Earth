@@ -92,6 +92,24 @@ local function session(ids, initiallyPaused)
   return gen,env
 end
 
+do
+  local gen,env=session(true)
+  local probes=0
+  env.ctx.safe=function() probes=probes+1; return false, 'waiting for the terrain update to finish' end
+  gen.request('geos'); env.ctx.speed=10; gen.update(5,env.ctx)
+  T.check(probes==0 and #env.sent==0 and gen.status().text:find('stop the vehicle'),
+    'driving defers terrain probes and explains the stationary requirement')
+  env.ctx.speed=0; gen.update(.5,env.ctx)
+  T.check(probes==0 and #env.sent==0, 'terrain probes wait for a full stationary second')
+  gen.update(.6,env.ctx)
+  T.check(probes==1 and #env.sent==0 and not env.paused
+    and gen.status().text:find('waiting for the terrain update to finish'),
+    'blocked switch preserves the precise safety reason without taking a hold')
+  env.ctx.safe=function() return true end
+  gen.update(.1,env.ctx); env.ack('geos',1); env.done(1)
+  T.check(gen.status().active=='geos' and not env.hold, 'pending switch proceeds after terrain support becomes safe')
+end
+
 -- Exact regression: accepted GEOS -> loading timeout -> choose the previously loaded Legacy.
 -- Also exercise an existing v1 companion without optional request-ID support.
 for _, ids in ipairs({false,true}) do

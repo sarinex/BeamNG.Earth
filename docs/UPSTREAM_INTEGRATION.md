@@ -19,6 +19,7 @@ The extension augments those boundaries; it does not replace grading, imagery, m
 | `server/roadgeom_ext/sidewalks.py` | Existing curb/ramp profiles; repaired corner triangulation and overlapping slab subtraction, retaining each triangle's height plane and UVs |
 | `server/roadgeom_ext/streaming.py` | Per-connection selection, immutable worker requests, epochs, output namespaces, existing Tracker/slot adapter, anchor pruning |
 | `mod/.../beamngEarth/roadgeom.lua` | Desired/accepted/loaded state, safe pending switch, progress, stale message gate, diagnostics |
+| `mod/.../beamngEarth/roadgeom_safety.lua` | Oriented vehicle-footprint terrain/collision probes and bounded caching of blocked checks |
 | `server/requirements-roadgeom-ext.txt` | Separately pinned optional dependencies with Python 3.10 marker |
 
 `surface_chunks` consumes the actual near-road tuples `(fid, Spec, ENU float64 Nx3 centreline, longitude)` already gathered by `roads.build_tile`, plus `junctions.find` corner records (`arc`, `fill`, optional `fills`) and the exact tile box. These tuples contain only `ground_parts`; fixed bridge/tunnel layers are excluded. It emits extension chunks with `geom=(XY, triangles)`, alongside unchanged ordinary chunks. The extension mesh adapter consumes those chunks immediately; they never go on the wire. It emits the existing `(P-origin, T, UV, materials, triangleMaterial)` tuple. `roads.write_tile` writes the existing JSON/shape layout, optionally adding `roadGeometry` diagnostics. A 60,000-vertex conservative GEOS budget falls back to legacy pavement; the general exporter remains unchanged.
@@ -34,8 +35,8 @@ Shapely performs buffering, validation/repair, union, tile intersections, materi
 | `server/earthd.py` | `Server.build_roads_tile` forwards backend/output namespace to both worker paths; `Connection` owns a Selection, handles additive messages and schedules captured builds; `prune` includes extension files |
 | `server/blockworker.py` | `roads_tile` forwards explicit backend to build/mesh/write adapters; no mutable backend process flag |
 | `server/peerwork.py` | `source_id` includes the extension package so packaged/distributed code identity reflects it |
-| `mod/.../core.lua` | Additive capability/state/progress/tile routing, per-frame switch state update, mission/unload hold cleanup and the structured `roadGeometryState()` settings accessor (`status()` remains a console string) |
-| `mod/.../roads.lua` | Governed retirement, stale-slot release, collision-safe position and settled checks; existing slot/collision lifecycle remains in charge |
+| `mod/.../core.lua` | Additive capability/state/progress/tile routing, per-frame switch state update, mission/unload hold cleanup, `roadGeometrySafe()` terrain/rebase gates and the structured `roadGeometryState()` settings accessor (`status()` remains a console string) |
+| `mod/.../roads.lua` | Governed retirement, stale-slot release, settled checks and delegation to vehicle-footprint terrain support checks; loaded deck/tunnel clearance retained, existing streaming spawn buffers and slot/collision lifecycle remain in charge |
 | `mod/.../settings.lua` | Persisted `roadGeometryBackend` enum, legacy default, status and application hook |
 | `mod/.../EarthSettings.vue` | Generator selector next to Roads and a distinct actual-active/pending line |
 | `install.py`, `start.py` | Separate optional requirements installation/stamp; failure leaves legacy available |
@@ -45,7 +46,7 @@ Shapely performs buffering, validation/repair, union, tile intersections, materi
 | `mod/tests/test_settings.lua`, `mod/tests/test_core_stubbed.lua` | Regression coverage for the structured generator accessor and its actual settings-page path |
 | `docs/benchmarks.json` | Two new repeatable evaluation locations; existing place coordinates/cameras untouched |
 
-New extension-owned validation files: `server/tests/test_roadgeom_ext.py`, `server/tests/test_roadgeom_install.py`, `mod/tests/test_roadgeom.lua`, `tools/benchmark_roadgeom.py`, `tools/run_lua_tests.py`, this document, `ROADGEOM_EVALUATION.md`, and `roadgeom-benchmark.json`.
+New extension-owned validation files: `server/tests/test_roadgeom_ext.py`, `server/tests/test_roadgeom_install.py`, `mod/tests/test_roadgeom.lua`, `mod/tests/test_roadgeom_safety.lua`, `tools/benchmark_roadgeom.py`, `tools/run_lua_tests.py`, this document, `ROADGEOM_EVALUATION.md`, and `roadgeom-benchmark.json`.
 
 ## Selection, cache and lifecycle policy
 
