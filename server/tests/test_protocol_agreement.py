@@ -122,7 +122,7 @@ MOD_TO_SERVER = {
     "peers": {"me": F(str), "members": F(list)},
     # roads (roads.py; additive): the mod removed its roads (switched off and on again): send them again
     "roads_reset": {},
-    "road_geometry": {"version": F(int), "backend": F(str), "speed": F(NUM)},
+    "road_geometry": {"version": F(int), "backend": F(str), "speed": F(NUM), "requestId": F(int, OPT)},
     "map_tiles": {"tiles": F(list)},       # the world map's basemap tiles as files (settings.mapTiles)
     "geocode": {"id": F(int), "q": F(str), "lat": F(NUM, OPT), "lon": F(NUM, OPT)},   # the map's search box
     "route": {"id": F(int), "lat0": F(NUM), "lon0": F(NUM), "lat1": F(NUM), "lon1": F(NUM),
@@ -144,7 +144,8 @@ TERRAIN = {"cx": F(NUM), "cy": F(NUM), "heightmap": F(str), "size": F(int), "squ
            "base": F(str, OPT), "baseSize": F(NUM, OPT),           # --near-visual detail: the block's photo
            "ter": F(str, OPT)}                                     # the block as a .ter (swapped in, no import)
 SERVER_TO_MOD = {
-    "road_geometry_state": {"version": F(int), "backend": F(str), "epoch": F(int), "ok": F(bool), "error": F(str)},
+    "road_geometry_state": {"version": F(int), "backend": F(str), "epoch": F(int), "ok": F(bool), "error": F(str),
+                            "requestId": F(int, OPT)},
     "server_list": {"servers": F(list, OPT), "error": F(str, OPT)},   # earthd.server_list (the list service)
     "geocode_result": {"id": F(int), "results": F(list), "error": F(str, OPT)},   # geocode.py (Photon)
     "route_result": {"id": F(int), "points": F(list), "dist": F(NUM), "dur": F(NUM), "error": F(str, OPT)},  # OSRM

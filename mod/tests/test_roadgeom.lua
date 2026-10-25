@@ -64,4 +64,141 @@ ctx.connected=false; m.update(.1,ctx)
 T.check(not paused, 'disconnect releases simulation hold')
 m.hello({version=1, active='legacy', epoch=0}, 'geos')
 T.check(m.status().pending=='geos', 'reconnect re-requests saved preference')
+
+local function session(ids, initiallyPaused)
+  local gen = fresh()
+  gen.hello({version=1, active='legacy', epoch=0, requestIds=ids}, 'legacy')
+  local env = {sent={}, paused=initiallyPaused or false, hold=false, retired=0, settled=false, ids=ids}
+  env.ctx = {connected=true, safe=true, speed=0, multiplayer=false,
+    roads={setHold=function(v) env.hold=v end},
+    paused=function() return env.paused end, pause=function(v) env.paused=v end,
+    settled=function() return env.settled end, send=function(msg) env.sent[#env.sent+1]=msg end}
+  function env.choose(value) gen.request(value); gen.update(1.1,env.ctx) end
+  function env.ack(value, epoch, id, ok)
+    return gen.state({ok=ok~=false, backend=value, epoch=epoch,
+      requestId=ids and (id or env.sent[#env.sent].requestId) or nil, error='fixture rejection'},
+      function() env.retired=env.retired+1 end)
+  end
+  function env.done(epoch)
+    env.settled=true
+    gen.progress({roads={5,5}, roadGeometry={epoch=epoch,failed=0}})
+    gen.update(.1,env.ctx)
+  end
+  function env.timeoutLoading()
+    env.choose('geos'); env.ack('geos',1)
+    gen.progress({roads={2,5}, roadGeometry={epoch=1,failed=0}})
+    gen.update(120.1,env.ctx)
+  end
+  return gen,env
+end
+
+-- Exact regression: accepted GEOS -> loading timeout -> choose the previously loaded Legacy.
+-- Also exercise an existing v1 companion without optional request-ID support.
+for _, ids in ipairs({false,true}) do
+  local gen,env=session(ids)
+  env.timeoutLoading()
+  local state=gen.status()
+  T.check(state.accepted=='geos' and state.active==nil and state.incomplete and state.phase=='incomplete',
+    'timeout reports an incomplete world, not the previously loaded Legacy backend')
+  T.check(state.lastLoaded=='legacy' and state.serverKnown and state.text:find('timed out'),
+    'timeout retains the actual server selection and explicit rollback target')
+  T.check(not env.paused and not env.hold and not gen.needsUpdate(), 'incomplete state releases only its own hold and stays idle')
+  local message=state.text
+  gen.progress({roads={5,5},roadGeometry={epoch=1,failed=0}}); gen.update(.1,env.ctx)
+  T.check(not gen.accept({roadBackend='geos',roadEpoch=1}) and gen.status().text==message,
+    'late tiles/progress cannot complete an abandoned rebuild after simulation resumes')
+  gen.request('legacy'); env.ctx.speed=15; gen.update(2,env.ctx)
+  T.check(#env.sent==1 and not env.paused, 'rollback after timeout remains pending while driving')
+  env.ctx.speed=0; env.ctx.safe=false; gen.update(2,env.ctx)
+  T.check(#env.sent==1 and not env.paused, 'rollback after timeout still checks collision support')
+  env.ctx.safe=true
+  env.choose('legacy')
+  T.check(#env.sent==2 and env.sent[2].backend=='legacy' and env.paused and env.hold,
+    'selecting Legacy after timeout sends a real server rollback request')
+  env.ack('legacy',2)
+  T.check(env.retired==2 and gen.status().active==nil, 'rollback retires partial GEOS and waits for its own geometry')
+  gen.progress({roads={5,5},roadGeometry={epoch=2,failed=0}})
+  gen.progress({roads={0,5},roadGeometry={epoch=1,failed=1}})
+  env.settled=true; gen.update(.1,env.ctx)
+  T.check(gen.status().active=='legacy', 'old epoch progress cannot erase completed rollback progress')
+  env.done(2)
+  T.check(gen.status().active=='legacy' and gen.status().accepted=='legacy' and not gen.status().incomplete
+    and not env.paused and not env.hold, 'Legacy is active only after the rollback rebuild and collision settle')
+  T.check(not gen.accept({roadBackend='geos',roadEpoch=1}), 'abandoned GEOS epoch remains stale after rollback')
+end
+
+do
+  local gen,env=session(true,true)
+  env.timeoutLoading()
+  T.check(env.paused and not env.hold, 'timeout preserves a pause owned by the player')
+  env.choose('geos')
+  T.check(#env.sent==2 and env.sent[2].backend=='geos', 'selecting the same accepted GEOS value explicitly retries an incomplete build')
+  env.ack('geos',2); env.done(2)
+  T.check(gen.status().active=='geos' and not gen.status().incomplete and env.paused,
+    'same-backend retry recovers without unpausing a player pause')
+end
+
+do
+  local gen,env=session(true)
+  env.choose('geos')
+  local first=env.sent[1].requestId
+  gen.update(120.1,env.ctx)
+  T.check(not gen.status().serverKnown and gen.status().active==nil, 'request timeout marks the server selection unconfirmed')
+  env.choose('legacy')
+  env.ack('geos',1,first)
+  T.check(gen.status().phase=='request' and gen.status().epoch==0 and env.retired==0,
+    'late acknowledgement from the timed-out request cannot replace the newer rollback')
+  env.ack('legacy',2); env.done(2)
+  T.check(gen.status().active=='legacy', 'correlated rollback recovers after a missing acknowledgement')
+end
+
+do
+  local gen,env=session(true)
+  env.choose('geos'); gen.update(120.1,env.ctx)
+  env.ack('geos',1)
+  T.check(gen.status().accepted=='geos' and gen.status().serverKnown and gen.status().active==nil
+    and env.retired==0 and not env.paused, 'late acknowledgement learns server state without loading or retiring unheld geometry')
+  env.choose('legacy'); env.ack('legacy',2); env.done(2)
+  T.check(gen.status().active=='legacy', 'explicit rollback works after a late acknowledgement')
+end
+
+do
+  local gen,env=session(false)
+  env.choose('geos'); gen.update(120.1,env.ctx)
+  env.choose('legacy')
+  T.check(#env.sent==1 and not env.paused, 'older uncorrelated server is not sent overlapping requests after timeout')
+  env.ack('geos',1)
+  T.check(env.retired==0 and gen.status().pending=='legacy', 'old-server late acknowledgement keeps the rollback queued safely')
+  gen.update(1.1,env.ctx); env.ack('legacy',2); env.done(2)
+  T.check(#env.sent==2 and gen.status().active=='legacy', 'older server completes the queued rollback after its first reply')
+end
+
+do
+  local gen,env=session(true)
+  env.timeoutLoading(); env.choose('legacy')
+  local restore=env.ack('geos',1,nil,false)
+  gen.update(.1,env.ctx)
+  T.check(restore==nil and gen.status().active==nil and gen.status().incomplete and not env.paused,
+    'rejected rollback cannot pretend the previous Legacy backend is loaded')
+  env.choose('legacy'); env.ack('legacy',2); env.done(2)
+  T.check(gen.status().active=='legacy', 'rollback can be retried after rejection')
+end
+
+do
+  local gen,env=session(true)
+  env.choose('geos'); env.ack('geos',1); gen.request('legacy')
+  gen.update(120.1,env.ctx)
+  T.check(gen.status().pending=='legacy' and not env.paused, 'rollback selected while loading remains queued after timeout')
+  gen.update(1.1,env.ctx); env.ack('legacy',2); env.done(2)
+  T.check(gen.status().active=='legacy', 'queued user rollback completes without another click')
+end
+
+do
+  local gen,env=session(true)
+  env.timeoutLoading()
+  gen.hello({version=1,active='legacy',epoch=0,requestIds=true},'legacy')
+  T.check(gen.status().active==nil and gen.status().pending=='legacy', 'reconnect does not equate the server selection with a completed rebuild')
+  gen.update(1.1,env.ctx); env.ack('legacy',1); env.done(1)
+  T.check(gen.status().active=='legacy' and not gen.status().incomplete, 'reconnect completes a fresh recovery epoch')
+end
 T.done('test_roadgeom')

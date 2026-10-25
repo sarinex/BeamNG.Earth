@@ -96,7 +96,8 @@ class Selection:
         return f"roadgeom_{self.token}_{self.epoch}_{self.backend}_v{VERSION}_{self.config}"
 
     def capability(self):
-        return {"version": 1, "backends": ["legacy", "geos"], "active": self.backend, "epoch": self.epoch}
+        return {"version": 1, "backends": ["legacy", "geos"], "active": self.backend, "epoch": self.epoch,
+                "requestIds": True}
 
     def tracker(self):
         return Tracker(self.backend, self.epoch, self.namespace)
@@ -108,8 +109,12 @@ class Selection:
     def select(self, conn, msg):
         error = None
         requested = msg.get("backend")
+        request_id = msg.get("requestId")
+        valid_id = isinstance(request_id, int) and not isinstance(request_id, bool) and 0 < request_id < 2**53
         try:
             validate(requested)
+            if request_id is not None and not valid_id:
+                raise ValueError("invalid road geometry requestId")
             if msg.get("version") != 1:
                 raise ValueError("unsupported road geometry protocol version")
             if requested == "geos":
@@ -127,5 +132,8 @@ class Selection:
             self.backend, self.epoch = requested, self.epoch + 1
             self.namespace = self._namespace()
             conn.roads = self.tracker()
-        conn.send({"type": "road_geometry_state", "version": 1, "backend": self.backend,
-                   "epoch": self.epoch, "ok": error is None, "error": error or ""})
+        response = {"type": "road_geometry_state", "version": 1, "backend": self.backend,
+                    "epoch": self.epoch, "ok": error is None, "error": error or ""}
+        if valid_id:
+            response["requestId"] = request_id
+        conn.send(response)

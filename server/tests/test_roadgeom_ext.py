@@ -293,6 +293,30 @@ class Geometry(unittest.TestCase):
 
 
 class Switching(unittest.TestCase):
+    def test_request_ids_are_advertised_echoed_and_optional_for_old_clients(self):
+        conn = self.connection()
+        self.assertTrue(self.selection.capability()['requestIds'])
+        self.selection.select(conn, {'version':1, 'backend':'legacy', 'speed':0, 'requestId':1})
+        self.assertEqual(self.messages[-1]['requestId'],1)
+        self.assertTrue(self.messages[-1]['ok'])
+        epoch = self.selection.epoch
+        with mock.patch('roadgeom_ext.streaming.availability', return_value=(False,'missing GEOS')):
+            self.selection.select(conn, {'version':1, 'backend':'geos', 'speed':0, 'requestId':2})
+        self.assertEqual(self.messages[-1]['requestId'],2)
+        self.assertFalse(self.messages[-1]['ok'])
+        self.assertEqual(self.selection.epoch,epoch)
+        self.select(conn,'legacy')
+        self.assertTrue(self.messages[-1]['ok'])
+        self.assertNotIn('requestId',self.messages[-1])
+
+    def test_invalid_request_ids_do_not_change_backend_or_epoch(self):
+        conn = self.connection()
+        for request_id in (True,False,0,-1,'1',1.5,2**53):
+            self.selection.select(conn, {'version':1,'backend':'legacy','speed':0,'requestId':request_id})
+            self.assertFalse(self.messages[-1]['ok'])
+            self.assertIn('requestId',self.messages[-1]['error'])
+        self.assertEqual(self.selection.epoch,0)
+
     def connection(self):
         self.messages = []
         self.selection = Selection()
