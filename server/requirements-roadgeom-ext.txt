@@ -1,0 +1,5 @@
+# Optional backend only. Keep upstream server/requirements.txt independent (Python 3.10+).
+# The installer uses wheels and reports optional failures without disabling Legacy.
+shapely==2.2.0; python_version >= "3.11"
+shapely==2.1.2; python_version < "3.11"
+mapbox-earcut==2.1.0

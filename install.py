@@ -30,6 +30,7 @@ MOD_SRC = os.path.join(ROOT, "mod", "beamng_earth")
 MOD_NAME = "beamng_earth"
 VENV = os.path.join(ROOT, ".venv")
 REQUIREMENTS = os.path.join(ROOT, "server", "requirements.txt")
+ROADGEOM_REQUIREMENTS = os.path.join(ROOT, "server", "requirements-roadgeom-ext.txt")
 CONFIG = os.path.join(ROOT, ".beamng_earth.json")
 REQ_STAMP = os.path.join(VENV, ".requirements.sha256")
 STEAM_APP_ID = "284160"
@@ -472,6 +473,38 @@ def requirements_hash():
         return hashlib.sha256(f.read()).hexdigest()
 
 
+def setup_roadgeom(dry_run=False, backend="geos"):
+    """Optional, separately stamped dependencies; failure must leave the legacy server usable."""
+    if backend == "legacy":
+        return True
+    stamp = os.path.join(VENV, ".roadgeom-requirements.sha256")
+    with open(ROADGEOM_REQUIREMENTS, "rb") as f:
+        wanted = hashlib.sha256(f.read()).hexdigest()
+    try:
+        with open(stamp, encoding="ascii") as f:
+            if f.read().strip() == wanted:
+                return True
+    except OSError:
+        pass
+    if dry_run:
+        say("(dry run) would install optional GEOS packages from server/requirements-roadgeom-ext.txt")
+        return True
+    py = venv_python()
+    say("Road geometry: checking optional GEOS + Earcut packages ...")
+    result = subprocess.run([py, "-m", "pip", "install", "--disable-pip-version-check", "--only-binary=:all:",
+                             "-r", ROADGEOM_REQUIREMENTS])
+    if result.returncode == 0:
+        result = subprocess.run([py, "-c", "import shapely, mapbox_earcut; "
+                                 "print('Shapely', shapely.__version__, '/ Earcut', mapbox_earcut.__version__)"])
+    if result.returncode != 0:
+        say("Road geometry: optional GEOS installation failed; Legacy remains available. "
+            "Retry install.py or start.py, or use --road-geometry legacy.")
+        return False
+    with open(stamp, "w", encoding="ascii") as f:
+        f.write(wanted)
+    return True
+
+
 def save_config(user_dir, dry_run):
     cfg = {"user_dir": user_dir, "version": version()}
     if dry_run:
@@ -497,6 +530,8 @@ def main():
                                                              "pick the first user folder found)")
     ap.add_argument("--no-venv", action="store_true", help="only install the mod; skip the Python environment")
     ap.add_argument("--dry-run", action="store_true", help="show what would be done without changing anything")
+    ap.add_argument("--road-geometry", choices=("legacy", "geos"), default="geos",
+                    help="optional geometry packages to install (default geos; game generator still defaults to legacy)")
     args = ap.parse_args()
 
     if sys.version_info < MIN_PY:
@@ -513,6 +548,7 @@ def main():
         say("Python packages: skipped (--no-venv)")
     else:
         setup_venv(args.dry_run)
+        setup_roadgeom(args.dry_run, args.road_geometry)
     save_config(user_dir, args.dry_run)
 
     launcher = "run_server.bat (double-click it)" if IS_WIN else "./run_server.sh"

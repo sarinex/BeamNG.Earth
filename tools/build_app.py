@@ -128,7 +128,7 @@ BOOT_SHIM = ("import sys\n"
              "run(sys.argv[1:])\n")
 
 
-def pyinstaller(work, ico, onefile, ver=None, boot=None):
+def pyinstaller(work, ico, onefile, ver=None, boot=None, road_geometry="geos"):
     server = os.path.join(ROOT, "server")
     mods = sorted(os.path.splitext(os.path.basename(p))[0] for p in glob.glob(os.path.join(server, "*.py")))
     cmd = [sys.executable] + (["-c", BOOT_SHIM, boot] if boot else ["-m", "PyInstaller"])
@@ -143,6 +143,15 @@ def pyinstaller(work, ico, onefile, ver=None, boot=None):
            "--add-data", f"{os.path.join(server, 'bridges_wd.npz')}{SEP}."]     # (bridgetypes.WD_PATH)
     # the sources' fingerprint (peerwork.code_id: compute-sharing helpers build only for the same code)
     sys.path.insert(0, server)
+    cmd += ["--collect-submodules", "roadgeom_ext"]
+    if road_geometry == "geos":
+        import roadgeom_ext
+        ready, reason = roadgeom_ext.availability()
+        if not ready:
+            sys.exit(reason)
+        # GEOS DLLs/shared libraries and Earcut's compiled extension, on Windows and Linux.
+        for package in ("shapely", "mapbox_earcut"):
+            cmd += ["--collect-all", package, "--copy-metadata", package.replace("_", "-")]
     import peerwork
     with open(os.path.join(work, "CODE_ID"), "w", encoding="ascii") as f:
         f.write(peerwork.source_id(server))
@@ -185,6 +194,8 @@ def appimage(dist, png, out, tool):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--road-geometry", choices=("legacy", "geos"), default="geos",
+                    help="bundle optional GEOS libraries (default geos); legacy produces a smaller build")
     ap.add_argument("--appimagetool", default=shutil.which("appimagetool") or "appimagetool",
                     help="Linux: the appimagetool executable (or its .AppImage)")
     ap.add_argument("--out", default=os.path.join(ROOT, "dist"))
@@ -208,11 +219,11 @@ def main():
         else:
             print("WARNING: PyInstaller's prebuilt bootloader (antivirus heuristics know it): "
                   "run tools/build_bootloader.py first")
-        dist = pyinstaller(work, ico, onefile=True, ver=ver, boot=boot)
+        dist = pyinstaller(work, ico, onefile=True, ver=ver, boot=boot, road_geometry=a.road_geometry)
         out = os.path.join(a.out, f"{NAME}-{ver}.exe")
         shutil.copyfile(os.path.join(dist, NAME + ".exe"), out)
     else:
-        dist = pyinstaller(work, ico, onefile=False)
+        dist = pyinstaller(work, ico, onefile=False, road_geometry=a.road_geometry)
         out = os.path.join(a.out, f"{NAME}-{ver}-x86_64.AppImage")
         appimage(dist, png, out, a.appimagetool)
     print(f"built {out} ({os.path.getsize(out) / 1e6:.0f} MB)")

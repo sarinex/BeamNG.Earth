@@ -61,7 +61,7 @@ jobs:
       - name: Grass patch (tools/gcpatch)
         run: sh tools/gcpatch/build.sh
       - name: Python packages
-        run: python -m pip install pyinstaller -r server/requirements.txt
+        run: python -m pip install pyinstaller -r server/requirements.txt -r server/requirements-roadgeom-ext.txt
       - name: appimagetool
         run: |
           curl -sSLo appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
@@ -91,7 +91,7 @@ jobs:
       - name: Rust kernels
         run: python tools/build_native.py
       - name: Python packages
-        run: python -m pip install pyinstaller -r server/requirements.txt
+        run: python -m pip install pyinstaller -r server/requirements.txt -r server/requirements-roadgeom-ext.txt
       # PyInstaller's bootloader compiled here (MSVC) instead of the wheel's prebuilt one that antivirus heuristics
       # know (VirusTotal 2026-10-17: 2/60 on 1.4.35); build_app.py stops without it
       - name: Bootloader from source

@@ -47,6 +47,8 @@ def main():
     ap = argparse.ArgumentParser(description="Start the BeamNG.Earth world server with the recommended options.")
     ap.add_argument("--update-mod", action="store_true", help="(the default now) copy the mod into the game when it differs")
     ap.add_argument("--keep-mod", action="store_true", help="leave the game's copy of the mod as it is")
+    ap.add_argument("--road-geometry", choices=("legacy", "geos"), default="geos",
+                    help="optional road packages to check (default geos; backend is selected in-game)")
     ap.add_argument("--user-dir", help="BeamNG.drive user folder (default: the one install.py found)")
     ap.add_argument("--yes", "-y", action="store_true", help="with --update-mod: replace the installed mod without asking")
     ap.add_argument("extra", nargs=argparse.REMAINDER, help="after --: more options for server/earthd.py")
@@ -78,6 +80,7 @@ def main():
         install.setup_venv(dry_run=False)
 
     help_text = server_flags(py)
+    install.setup_roadgeom(backend=args.road_geometry)
     cmd = [py, EARTHD, "--user-dir", user_dir]
     skipped = []
     for flag, value in RECOMMENDED:
