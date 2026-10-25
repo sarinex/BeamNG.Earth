@@ -1,0 +1,217 @@
+{
+  "kind": "synthetic offline, not in-game",
+  "python": "3.12.13",
+  "libraries": "Shapely 2.2.0, Earcut 2.1.0",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "logicalCPUs": 32,
+  "version": "1",
+  "repeats": 7,
+  "roadsPaintedInGround": true,
+  "scope": "road tile generation + terrain following + sidewalk/collision and cdae export; excludes terrain imagery, downloads and game loading",
+  "fixtures": {
+    "T": {
+      "legacy": {
+        "vertices": 1652,
+        "triangles": 792,
+        "meshBytes": 147474,
+        "diagnostics": null,
+        "p50Ms": 17.976199999793607,
+        "p95Ms": 18.181280000044353,
+        "pythonPeakBytes": 938596,
+        "processRssBytes": 51896320
+      },
+      "geos": {
+        "vertices": 1673,
+        "triangles": 799,
+        "meshBytes": 148597,
+        "diagnostics": {
+          "polygons": 1,
+          "holes": 0,
+          "earcutTriangles": 7,
+          "geosCorners": 2,
+          "backend": "geos",
+          "footprintMs": 0.827,
+          "meshMs": 4.744,
+          "vertices": 1673,
+          "triangles": 799,
+          "version": "1",
+          "meshBytes": 148597
+        },
+        "p50Ms": 56.86659999992116,
+        "p95Ms": 57.81512000003204,
+        "pythonPeakBytes": 942545,
+        "processRssBytes": 53317632
+      }
+    },
+    "cross": {
+      "legacy": {
+        "vertices": 2024,
+        "triangles": 964,
+        "meshBytes": 229656,
+        "diagnostics": null,
+        "p50Ms": 26.573399999506364,
+        "p95Ms": 27.252049999697192,
+        "pythonPeakBytes": 1538178,
+        "processRssBytes": 53665792
+      },
+      "geos": {
+        "vertices": 2054,
+        "triangles": 974,
+        "meshBytes": 231247,
+        "diagnostics": {
+          "polygons": 1,
+          "holes": 0,
+          "earcutTriangles": 10,
+          "geosCorners": 4,
+          "backend": "geos",
+          "footprintMs": 1.151,
+          "meshMs": 7.387,
+          "vertices": 2054,
+          "triangles": 974,
+          "version": "1",
+          "meshBytes": 231247
+        },
+        "p50Ms": 108.8980000004085,
+        "p95Ms": 109.53371000041443,
+        "pythonPeakBytes": 1672280,
+        "processRssBytes": 54816768
+      }
+    },
+    "acute": {
+      "legacy": {
+        "vertices": 1396,
+        "triangles": 666,
+        "meshBytes": 98024,
+        "diagnostics": null,
+        "p50Ms": 11.718699999619275,
+        "p95Ms": 12.20424999937677,
+        "pythonPeakBytes": 721076,
+        "processRssBytes": 55271424
+      },
+      "geos": {
+        "vertices": 1417,
+        "triangles": 673,
+        "meshBytes": 99867,
+        "diagnostics": {
+          "polygons": 1,
+          "holes": 0,
+          "earcutTriangles": 7,
+          "geosCorners": 0,
+          "backend": "geos",
+          "footprintMs": 0.679,
+          "meshMs": 3.164,
+          "vertices": 1417,
+          "triangles": 673,
+          "version": "1",
+          "meshBytes": 99867
+        },
+        "p50Ms": 35.54179999991902,
+        "p95Ms": 38.70662999952401,
+        "pythonPeakBytes": 722921,
+        "processRssBytes": 55582720
+      }
+    },
+    "offset": {
+      "legacy": {
+        "vertices": 2076,
+        "triangles": 990,
+        "meshBytes": 262844,
+        "diagnostics": null,
+        "p50Ms": 28.061399999387504,
+        "p95Ms": 28.960810000353376,
+        "pythonPeakBytes": 1787418,
+        "processRssBytes": 56426496
+      },
+      "geos": {
+        "vertices": 2151,
+        "triangles": 1015,
+        "meshBytes": 274167,
+        "diagnostics": {
+          "polygons": 1,
+          "holes": 0,
+          "earcutTriangles": 25,
+          "geosCorners": 4,
+          "backend": "geos",
+          "footprintMs": 1.674,
+          "meshMs": 7.278,
+          "vertices": 2151,
+          "triangles": 1015,
+          "version": "1",
+          "meshBytes": 274167
+        },
+        "p50Ms": 129.64779999947496,
+        "p95Ms": 130.61011000027065,
+        "pythonPeakBytes": 1887265,
+        "processRssBytes": 57958400
+      }
+    },
+    "multiway": {
+      "legacy": {
+        "vertices": 3296,
+        "triangles": 1572,
+        "meshBytes": 365227,
+        "diagnostics": null,
+        "p50Ms": 39.17470000033063,
+        "p95Ms": 40.497449999566015,
+        "pythonPeakBytes": 2427314,
+        "processRssBytes": 58208256
+      },
+      "geos": {
+        "vertices": 3344,
+        "triangles": 1588,
+        "meshBytes": 367754,
+        "diagnostics": {
+          "polygons": 1,
+          "holes": 0,
+          "earcutTriangles": 16,
+          "geosCorners": 6,
+          "backend": "geos",
+          "footprintMs": 1.702,
+          "meshMs": 9.426,
+          "vertices": 3344,
+          "triangles": 1588,
+          "version": "1",
+          "meshBytes": 367754
+        },
+        "p50Ms": 169.315899999674,
+        "p95Ms": 172.77963000015006,
+        "pythonPeakBytes": 2608141,
+        "processRssBytes": 59011072
+      }
+    },
+    "irregular_roundabout": {
+      "legacy": {
+        "vertices": 1436,
+        "triangles": 690,
+        "meshBytes": 174761,
+        "diagnostics": null,
+        "p50Ms": 20.1069999993706,
+        "p95Ms": 21.040560000164987,
+        "pythonPeakBytes": 1021147,
+        "processRssBytes": 59228160
+      },
+      "geos": {
+        "vertices": 1745,
+        "triangles": 793,
+        "meshBytes": 197640,
+        "diagnostics": {
+          "polygons": 1,
+          "holes": 1,
+          "earcutTriangles": 103,
+          "geosCorners": 2,
+          "backend": "geos",
+          "footprintMs": 2.985,
+          "meshMs": 3.66,
+          "vertices": 1745,
+          "triangles": 793,
+          "version": "1",
+          "meshBytes": 197640
+        },
+        "p50Ms": 99.12189999977272,
+        "p95Ms": 100.20018000013806,
+        "pythonPeakBytes": 1090486,
+        "processRssBytes": 58232832
+      }
+    }
+  }
+}

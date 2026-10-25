@@ -11,6 +11,12 @@
     ]
   },
   "places": [
+    {"id": "roadgeom_fells", "name": "Road geometry: Fells Point", "lat": 39.28188, "lon": -76.59114, "heading": 180,
+     "group": "roadgeom", "heldout": false, "tags": ["city", "junction", "sidewalk"],
+     "why": "Group 1 A/B: offset junctions, narrow streets, curb returns and pavement overlap"},
+    {"id": "roadgeom_harbor", "name": "Road geometry: Harbor Point", "lat": 39.2801, "lon": -76.5890, "heading": 180,
+     "group": "roadgeom", "heldout": false, "tags": ["city", "roundabout", "sidewalk"],
+     "why": "Group 1 A/B: mapped road rings, islands, entries and exits; confirm the available source topology"},
     {"id": "fells_point", "name": "Fells Point, Baltimore MD", "lat": 39.2834, "lon": -76.5934, "heading": 180,
      "group": "places", "heldout": false, "tags": ["north-america", "city", "water", "flat", "data-rich", "temperate"],
      "why": "the owner's home area: dense old city, harbour"},
