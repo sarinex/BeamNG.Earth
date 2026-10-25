@@ -34,7 +34,7 @@ Shapely performs buffering, validation/repair, union, tile intersections, materi
 | `server/earthd.py` | `Server.build_roads_tile` forwards backend/output namespace to both worker paths; `Connection` owns a Selection, handles additive messages and schedules captured builds; `prune` includes extension files |
 | `server/blockworker.py` | `roads_tile` forwards explicit backend to build/mesh/write adapters; no mutable backend process flag |
 | `server/peerwork.py` | `source_id` includes the extension package so packaged/distributed code identity reflects it |
-| `mod/.../core.lua` | Additive capability/state/progress/tile routing, per-frame switch state update, mission/unload hold cleanup and settings bridge |
+| `mod/.../core.lua` | Additive capability/state/progress/tile routing, per-frame switch state update, mission/unload hold cleanup and the structured `roadGeometryState()` settings accessor (`status()` remains a console string) |
 | `mod/.../roads.lua` | Governed retirement, stale-slot release, collision-safe position and settled checks; existing slot/collision lifecycle remains in charge |
 | `mod/.../settings.lua` | Persisted `roadGeometryBackend` enum, legacy default, status and application hook |
 | `mod/.../EarthSettings.vue` | Generator selector next to Roads and a distinct actual-active/pending line |
@@ -42,6 +42,7 @@ Shapely performs buffering, validation/repair, union, tile intersections, materi
 | `tools/build_app.py`, `.github/workflows/release.yml` | Native library collection and dependency installation on both release platforms |
 | `tools/package.py` | Include extension documentation in the source distribution; existing server tree collection already includes modules/requirements |
 | `server/tests/test_protocol_agreement.py` | Additive versioned message fields, extension Lua send/read discovery; switching exercised by extension tests |
+| `mod/tests/test_settings.lua`, `mod/tests/test_core_stubbed.lua` | Regression coverage for the structured generator accessor and its actual settings-page path |
 | `docs/benchmarks.json` | Two new repeatable evaluation locations; existing place coordinates/cameras untouched |
 
 New extension-owned validation files: `server/tests/test_roadgeom_ext.py`, `server/tests/test_roadgeom_install.py`, `mod/tests/test_roadgeom.lua`, `tools/benchmark_roadgeom.py`, `tools/run_lua_tests.py`, this document, `ROADGEOM_EVALUATION.md`, and `roadgeom-benchmark.json`.
@@ -57,6 +58,8 @@ The client distinguishes the persisted desired selection, the server-accepted ge
 Each connection/revision has its own generated-output subdirectory: connection token, epoch, backend, extension version and a hash of code identity plus server geometry parameters. Anchor IDs and tile indices remain in filenames; anchor-scoped height quantum/handedness/width/elevation inputs remain the upstream inputs. Source/map/DEM releases use the upstream raw-data caches; generated geometry has **no persistent cross-session cache**. Session identity and a fresh connection token prevent reuse across source updates or reconnects. Threads capture backend/namespace before dispatch; worker processes receive explicit arguments. Closed trackers suppress late announcements and every revision writes different files. The existing `pool_shapes` adapter resolves those files and records actual connection holds; pooled paths are reused only after the existing serial/reference acknowledgements release them. Stale client messages explicitly return their unused slots.
 
 Input XY is rounded to 1 mm on the common anchor ENU lattice before robust overlays. Final material differences use float64 without resnapping intersection points (resnapping diagonals caused measurable thin overlaps). Polygons and features have stable ordering, including holes and triangles. Adjacent tiles use full feature geometry/nearby context before exact clipping. Mesh bytes are deterministic for identical inputs/frame, independent of worker order, proven across a spawned process. A rebase applies the existing rigid transform; regeneration in a new tangent frame can change millimetre rounding. Arbitrary-frame bit identity is not promised.
+
+Backend implementation version 2 compacts the terrain-following result with the existing road builder's position/UV sharing precision and removes unused vertices before enforcing its 60,000 referenced-vertex budget. This avoids falling back merely because native tessellation temporarily duplicates vertices. A genuinely oversized exported mesh still falls back. The version participates in output namespace identity; this is independent of the additive wire extension version, which remains 1.
 
 Old-anchor extension files enter the existing throttled prune queue only after upstream's held-anchor test permits it. Previous switch revisions within a still-held anchor remain on disk until anchor/session cleanup, protecting direct-path shape references; repeated switching can temporarily increase disk use. Pooled slots retain their existing lifecycle.
 

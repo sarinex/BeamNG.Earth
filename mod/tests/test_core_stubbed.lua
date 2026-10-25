@@ -463,6 +463,8 @@ T.check(calls.setClusterPosRelRot > moves and #received('commit_anchor') == 3, '
 T.check(preRenderLog[fA].car.x > 1500, 'the camera saw one mismatched frame (car still in the old frame)')
 frame()
 T.check(type(core.status()) == 'string', 'status works')
+T.check(type(core.roadGeometryState()) == 'table' and core.roadGeometryState().active == 'legacy',
+  'structured road generator accessor is separate from the console status string')
 local function lagOf() local v = core._rebaseLag(); return v end
 T.check(lagOf() == 1, 'measured lag = 1 frame')
 

@@ -369,7 +369,7 @@ function fmt(v, digits) {
 function infoValue(item) {
   const s = status.value
   if (item.id === "connection") return connectionText.value
-  if (item.id === "roadGeometry") return (s.roadGeometry && s.roadGeometry.text) || "Legacy (Original)"
+  if (item.id === "roadGeometry") return (s.roadGeometry && s.roadGeometry.text) || "Waiting for road generator status"
   if (item.id === "anchor") return s.anchorId ? `#${s.anchorId}  ${fmt(s.anchorLat, 5)}, ${fmt(s.anchorLon, 5)}` : "none"
   if (item.id === "player") return (typeof s.playerLat === "number") ? `${fmt(s.playerLat, 5)}, ${fmt(s.playerLon, 5)}  (${fmt(s.dist / 1000, 1)} km from origin)` : "-"
   if (item.id === "attribution") return s.attribution || "-"

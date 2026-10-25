@@ -357,7 +357,7 @@ function M.uiState()
   status.gravity = w and w.gravityLine and w.gravityLine() or nil
   status.deshadow = st and st.deshadow or 'off'
   status.colormatch = st and st.colormatch or 'off'
-  status.roadGeometry = st and st.roadGeometry or nil
+  status.roadGeometry = core and core.roadGeometryState and core.roadGeometryState() or nil
   -- the download cache: the server's last numbers, fresh ones asked every CACHE_POLL-th call (the page
   -- polls every 2 s while it is open)
   cachePolls = cachePolls + 1

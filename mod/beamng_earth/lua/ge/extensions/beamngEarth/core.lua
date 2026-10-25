@@ -2189,6 +2189,7 @@ function M.requestMapTiles(tiles)
 end
 
 function M._state() return st end -- read-only: the dev tools and the settings page
+function M.roadGeometryState() return roadgeom.status() end -- structured state; status() is a console dump string
 function M._rebaseLag() return rebaseLag end -- for tests
 function M._governor() return gov end
 

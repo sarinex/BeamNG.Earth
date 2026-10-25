@@ -210,12 +210,20 @@ beamngEarth_dev = { set = function(nm, on) devCalls[#devCalls + 1] = nm .. '=' .
   state = function() return { active = true } end }
 local stTbl = { sessionId = 'abc', anchorId = 3, anchor = { lat = 1, lon = 2 }, status = 'ok', inOurLevel = true,
   player = { lat = 1.1, lon = 2.2, dist = 500 } }
-beamngEarth_core = { _state = function() return stTbl end, attribution = function() return 'credits' end }
+local generator = {active='geos', desired='geos', text='GEOS + Earcut (Experimental)', diagnostics={fallbacks=0}}
+beamngEarth_core = { _state = function() return stTbl end, attribution = function() return 'credits' end,
+  roadGeometryState = function() return generator end }
 local s = settings.uiState()
 T.check(s.settings.rebaseDistance == settings.get('rebaseDistance') and #s.schema == #settings.ORDER, 'uiState: settings + schema')
 T.check(s.status.connection == 'disconnected' and s.status.session == 'abc' and s.status.anchorId == 3
   and s.status.attribution == 'credits' and s.status.dist == 500, 'uiState: status from the core')
 T.check(s.dev and s.dev.active, 'uiState: dev state')
+T.check(s.status.roadGeometry == generator and stTbl.roadGeometry == nil,
+  'generator status comes from the structured accessor, not the core world-state table')
+generator.pending, generator.text = 'legacy', 'Pending legacy: stop the vehicle'
+T.check(settings.uiState().status.roadGeometry.text == generator.text, 'generator pending status reaches the settings page')
+generator.diagnostics.fallbacks = 2
+T.check(settings.uiState().status.roadGeometry.diagnostics.fallbacks == 2, 'generator fallback counts reach the page')
 T.check(s.status.weather == 'Weather (real): 20 C' and s.status.gravity:match('EGM2008') and s.status.deshadow == 'off',
   'uiState: server features (weather, gravity, de-shadowing off)')
 stTbl.deshadow = 'full'

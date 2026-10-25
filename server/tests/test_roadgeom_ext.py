@@ -71,6 +71,34 @@ assert not roadgeom_ext.availability()[0]
 
 @unittest.skipUnless(roadgeom_ext.availability()[0], 'optional GEOS dependencies absent')
 class Geometry(unittest.TestCase):
+    def test_vertex_budget_counts_compacted_referenced_vertices(self):
+        from roadgeom_ext.geos_backend import merge
+        x, y = np.meshgrid(np.arange(150), np.arange(150))
+        grid = np.c_[x.ravel(), y.ravel(), x.ravel() * .03]
+        i = np.arange(149)[:, None] * 150 + np.arange(149)[None, :]
+        tris = np.concatenate([np.stack([i, i+1, i+151], -1).reshape(-1,3),
+                               np.stack([i, i+151, i+150], -1).reshape(-1,3)])
+        p = grid[tris].reshape(-1,3)
+        t = np.arange(len(p)).reshape(-1,3)
+        uv = p[:,:2] / 8
+        # Include unused vertices too, matching what clipping can leave in upstream road meshes.
+        p = np.vstack([p, [[-100,-100,0], [-200,-200,0]]])
+        uv = np.vstack([uv, [[0,0], [0,0]]])
+        stats = {}
+        result = merge([(p,t,uv,['road_asphalt'],np.zeros(len(t),dtype=int))], stats)
+        self.assertGreater(stats['inputVertices'],60000)
+        self.assertEqual(len(result[0]),22500)
+        self.assertEqual(stats['compactedVertices'],22500)
+        np.testing.assert_array_equal(result[0][result[1]], grid[tris])
+        np.testing.assert_array_equal(result[2][result[1]], grid[tris][:,:,:2] / 8)
+
+    def test_genuinely_oversized_mesh_retains_vertex_guard(self):
+        from roadgeom_ext.geos_backend import merge
+        p = np.c_[np.arange(60003,dtype=float), np.arange(60003) % 2, np.zeros(60003)]
+        t = np.arange(len(p)).reshape(-1,3)
+        with self.assertRaisesRegex(ValueError,'60003 referenced vertices'):
+            merge([(p,t,p[:,:2],['road_asphalt'],np.zeros(len(t),dtype=int))])
+
     def test_real_worker_spawn_uses_backend_and_matches_local_shape_bytes(self):
         import blockworker
         with mock.patch.object(blockworker, '_s', None):

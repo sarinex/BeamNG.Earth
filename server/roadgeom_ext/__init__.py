@@ -1,6 +1,6 @@
 """Optional road geometry extension. Importing this package needs no GEOS libraries."""
 
-VERSION = "1"
+VERSION = "2"
 BACKENDS = ("legacy", "geos")
 
 
@@ -38,7 +38,7 @@ def build_mesh(backend, *args, diagnostics=None, **kwargs):
     import time
     t0 = time.perf_counter()
     try:
-        result = build(*args, **kwargs)
+        result = build(*args, diagnostics=diagnostics, **kwargs)
         if result is None and any("geom" in c for c in args[1]):
             raise ValueError("terrain following produced no GEOS triangles")
     except Exception as exc:

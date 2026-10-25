@@ -6,6 +6,14 @@ local text, elapsed, still = 'Legacy (Original)', 0, 0
 local held, wasPaused, complete = false, false, false
 local diagnostics = {}
 
+local function activeText()
+  local label = active == 'geos' and 'GEOS + Earcut (Experimental)' or 'Legacy (Original)'
+  if active == 'geos' and (diagnostics.fallbacks or 0) > 0 then
+    label = label .. ' (legacy fallback on ' .. tostring(diagnostics.fallbacks) .. ' tile operations)'
+  end
+  return label
+end
+
 function M.request(value)
   desired = value
   if supported == false and value == 'geos' then
@@ -15,6 +23,7 @@ function M.request(value)
   end
   pending = value ~= active and value or nil
   if pending then text = 'Pending ' .. pending .. ': stop the vehicle to rebuild roads' end
+  if not pending and not phase then text = activeText() end
   return true
 end
 
@@ -56,6 +65,7 @@ function M.tile(msg)
       diagnostics[key] = (diagnostics[key] or 0) + (d[key] or 0)
     end
     if d.reason then diagnostics.lastFallback = d.reason end
+    if not pending and not phase then text = activeText() end
   end
 end
 
@@ -90,7 +100,7 @@ function M.update(dt, ctx)
     if phase == 'loading' and complete and ctx.settled() then
       active, phase = accepted, nil
       pending = desired ~= active and desired or nil
-      text = active == 'geos' and 'GEOS + Earcut (Experimental)' or 'Legacy (Original)'
+      text = activeText()
       if held then ctx.pause(wasPaused); ctx.roads.setHold(false); held = false end
     elseif elapsed > 120 then
       -- Terrain remains present. Resume on failure; show incomplete state and retry explicitly on the next selection.
@@ -116,8 +126,10 @@ function M.update(dt, ctx)
 end
 
 function M.status()
+  local display = text
+  if pending or phase then display = activeText() .. '; ' .. text end
   return {active = active, desired = desired, accepted = accepted, pending = pending, phase = phase,
-    supported = supported, epoch = epoch, text = text, diagnostics = diagnostics}
+    supported = supported, epoch = epoch, text = display, diagnostics = diagnostics}
 end
 
 function M.needsUpdate() return pending ~= nil or phase ~= nil or held end

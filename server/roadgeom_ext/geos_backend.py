@@ -73,7 +73,7 @@ def surface_chunks(roads_near, chunks, corners, box, stats):
         return chunks
 
 
-def build_mesh(frame, chunks, elev, origin, lift=0.0, clip=None, follow=False, q=None, drawn=None):
+def build_mesh(frame, chunks, elev, origin, lift=0.0, clip=None, follow=False, q=None, drawn=None, diagnostics=None):
     import roadmesh
     regular = [c for c in chunks if "geom" not in c]
     mesh = roadmesh.build(frame, regular, elev, origin, lift, clip, follow, q, drawn)
@@ -93,10 +93,10 @@ def build_mesh(frame, chunks, elev, origin, lift=0.0, clip=None, follow=False, q
             p = np.c_[xy, z + lift]
         if len(tri):
             parts.append((p - np.asarray(origin), tri, uv, [c["m"]], np.zeros(len(tri), dtype=int)))
-    return merge(parts)
+    return merge(parts, diagnostics)
 
 
-def merge(parts):
+def merge(parts, diagnostics=None):
     if not parts:
         return None
     ps, ts, us, ms, materials, count = [], [], [], [], [], 0
@@ -108,6 +108,17 @@ def merge(parts):
             mapping.append(materials.index(name))
         ps.append(p); ts.append(t + count); us.append(uv); ms.append(np.asarray(mapping)[m])
         count += len(p)
-    if count > 60000:
-        raise ValueError("GEOS road tile exceeds conservative 60,000 vertex budget")
-    return np.concatenate(ps), np.concatenate(ts), np.concatenate(us), materials, np.concatenate(ms)
+    p, t, uv, m = np.concatenate(ps), np.concatenate(ts), np.concatenate(us), np.concatenate(ms)
+    # Native terrain following emits independent triangle vertices, and clipped ribbons can retain
+    # unused inputs. The exporter only stores referenced vertices. Compact them BEFORE the budget
+    # check, using the same position+UV precision as the existing road mesh builder.
+    import roadmesh
+    p, uv, t = roadmesh._shared(p, uv, t)
+    used, inverse = np.unique(t, return_inverse=True)
+    p, uv, t = p[used], uv[used], inverse.reshape(t.shape)
+    if diagnostics is not None:
+        diagnostics["inputVertices"] = count
+        diagnostics["compactedVertices"] = len(p)
+    if len(p) > 60000:
+        raise ValueError(f"GEOS road tile exceeds conservative 60,000 vertex budget after compaction ({len(p)} referenced vertices)")
+    return p, t, uv, materials, m
