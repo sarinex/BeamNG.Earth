@@ -1,0 +1,4 @@
+# Optional offline road intelligence preprocessing. Existing requirements stay unchanged.
+eclipse-sumo==1.28.0
+sumolib==1.28.0
+osmium==4.3.2

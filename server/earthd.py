@@ -92,6 +92,7 @@ import parking as parkingmod  # noqa: E402
 import roads as roadsmod  # noqa: E402
 import roadgeom_ext  # noqa: E402
 from roadgeom_ext.streaming import Selection as RoadGeometrySelection  # noqa: E402
+from roadintel_ext.runtime import routed as roadintel_routed  # noqa: E402
 import randomplace as randomplacemod  # noqa: E402
 import placepreview as placepreviewmod  # noqa: E402
 import pools as poolsmod  # noqa: E402
@@ -985,6 +986,7 @@ class Server:
             anchor._mph = v
         return v
 
+    @roadintel_routed
     def build_navgraph(self, aid, x, y, serial):
         """navgraph.py: the AI road graph around (x, y) of anchor aid, written to the session folder (the
         anchor's earlier graphs deleted): (vfs path, nodes, edges) or None. Worker threads."""
@@ -1071,6 +1073,7 @@ class Server:
         log.info("load boost %s (%s): %d threads on CPUs %s", "on" if on else "off", why, n,
                  ",".join(map(str, sorted(cpus))))
 
+    @roadintel_routed
     def build_far_bld_tile(self, aid, tx, ty):
         """buildings.far_tile: a far (render-only) building tile of anchor aid, or None. Worker threads."""
         anchor = self.anchors.get(aid)
@@ -1088,6 +1091,7 @@ class Server:
                                      lambda la, lo: self.ground(anchor.frame, la, lo, self.dem.sample(la, lo, zoom)),
                                      self.out_dir, self.vfs_dir, aid)
 
+    @roadintel_routed
     def build_terrain_patch(self, aid, key, box):
         """terrainpatch.py: the collision patch of the ground under a collision island off the terrain block (the
         mod's terrainpatch.lua), written to the session folder in pieces. ([(vfs path, (cx, cy))], triangles) or None
@@ -1109,6 +1113,7 @@ class Server:
             parts, n = terrainpatchmod.build(anchor.frame, elev, box, path)
         return [(f"{self.vfs_dir}/{os.path.basename(p)}", c) for p, c in parts], n
 
+    @roadintel_routed
     def build_roads_tile(self, aid, tx, ty, backend="legacy", namespace=None):
         """roads.py: one road tile of anchor aid, written to the session folder. Returns (vfs path,
         chunks) or None if the anchor is gone. Worker threads (fetches the map cells it lacks)."""
@@ -1208,6 +1213,7 @@ class Server:
                                        mesh, dmesh, bld, props, wires, park, tunnel_mesh=tmesh,
                                        backend=backend, diagnostics=diagnostics)
 
+    @roadintel_routed
     def ground_z_at(self, anchor, e, n):
         """The ground's height (the frame's up) at (e, n) of anchor's frame, from the elevation data (not graded: the
         mod sets the car down on the collision there)."""
@@ -1224,6 +1230,7 @@ class Server:
             z = self.sea.carve(la, lo, z)
         return z
 
+    @roadintel_routed
     def grader_for(self, anchor):
         """The anchor's grading.Grader (--grading on), else None."""
         if not self.grading:
@@ -1237,8 +1244,11 @@ class Server:
                 anchor.grader.dem = self.dem                # (its urgent lane: _plan_missing)
                 anchor.grader.shared = plancachemod.for_grader(self.cache_dir, anchor.grader, self.road_widths,
                                                               anchor.grader.wet)
+            if hasattr(self.mapdata, "dataset"):
+                anchor.grader.shared = None  # profile-specific plans stay in this fresh anchor
             return anchor.grader
 
+    @roadintel_routed
     def warm_roads(self, anchor, x, y, vx, vy):
         """Queue the road plans of the cells the physics block will cover along the player's straight path
         (WARM_STEPS_S; the block's half width + the grading pad), then those within WARM_AROUND."""
@@ -1269,6 +1279,7 @@ class Server:
                 self.warm_thread.start()
             self.warm_cv.notify()
 
+    @roadintel_routed
     def download_ahead(self, anchor, x, y, vx, vy):
         """Fetch the elevation tiles (the blocks' zoom) and the road tiles' map cells along the player's straight
         path AHEAD_S s ahead into the disk caches (one round at a time, again every AHEAD_MOVE_M)."""
@@ -1317,6 +1328,7 @@ class Server:
                 self.ahead_busy = False
         self.ahead_pool.submit(run)
 
+    @roadintel_routed
     def warm_imagery(self, anchor, x, y, vx, vy):
         """The lazy imagery sources (NAIP) along the player's straight path (WARM_STEPS_S), over the block's
         footprint and a margin, at the base photo's texel size: fetched before the blocks there are built."""
@@ -1345,6 +1357,7 @@ class Server:
                 with self.warm_cv:      # not again for this pose list
                     self.warm_want = [w for w in self.warm_want if w[1] != job[1]]
 
+    @roadintel_routed
     def make_heightmap(self, anchor, cx, cy, progress, lane=LANE_REQUEST, queued_at=None):
         """Worker thread: build and write one 1024² terrain. The follow / prefetch blocks (no progress
         callback) build in the block process when there is one; the anchor's first block here, so its
@@ -1371,6 +1384,7 @@ class Server:
             # resync): ahead of every other download
             return self._make_heightmap_here(anchor, cx, cy, progress, t0, q, base)
 
+    @roadintel_routed
     def make_provisional(self, anchor, cx, cy, progress):
         """Worker thread: a teleport's first block before its road plans (the user, 2026-10-22: "place the car as
         soon as possible"): the DEM's ground with the runways (no road grading, tunnels, arches or sea floor, which
@@ -1466,6 +1480,7 @@ class Server:
         info["stages"] = stages
         return self._finish_heightmap(anchor, cx, cy, info, t0, base)
 
+    @roadintel_routed
     def tunnels_of(self, anchor, elev, g):
         """anchor.tunnels (roads.TunnelProfiles), made now if not yet (elev: the caller's ground; g: the anchor's
         Grader or None, taken before: grader_for takes grader_lock)."""
@@ -1477,6 +1492,7 @@ class Server:
                 self._tunnel_ground(anchor, g)
             return anchor.tunnels
 
+    @roadintel_routed
     def tunnel_floor(self, anchor):
         """The floor of a tunnel tube at the anchor's origin (roads.tunnel_floor_at), or None: a teleport into a park
         arch set the car down on the soil over it, where it hung on the arch's top (2026-10-17)."""
@@ -1639,6 +1655,7 @@ class Server:
     def base_name(self, key, rev=0):
         return self.hm_name(key)[:-4] + ("_base.png" if not rev else f"_base_r{rev}.png")
 
+    @roadintel_routed
     def write_base(self, anchor, cx, cy, pool=None, rev=0, photo=None, quick=False):
         """Detail mode: the block footprint's aerial photo (BASE_PX² PNG, row 0 = north, the same imagery
         chain and corrections as the far tiles), the drawn block's base colour. The game would pack it into
@@ -1738,6 +1755,7 @@ class Server:
     def terrain_cached(self, key):
         return key in self.hm or key in self.hm_inflight
 
+    @roadintel_routed
     async def terrain(self, anchor, cx, cy, progress=None, lane=LANE_REQUEST):
         """Info of the (anchorId, cx, cy) terrain, generating it once (deduplicated). lane: the block
         process that builds it (LANE_PREFETCH for the prefetch)."""
@@ -1970,6 +1988,7 @@ class Server:
         f = getattr(self.far_pool, "remote_slots", None)
         return f() if f is not None else 0
 
+    @roadintel_routed
     def make_tile(self, anchor, tile, prev=None):
         """Worker thread: build and write one far tile (and its texture). Returns its TileInfo.
         prev: the tile's stale TileInfo (--colormatch): only its texture is rendered again."""
@@ -2114,6 +2133,7 @@ class Server:
         except Exception as e:          # the tile without its asphalt layer
             log.debug("road mask of %s: %s", tile.key, e)
 
+    @roadintel_routed
     def retexture(self, anchor, tile, prev):
         """Worker thread: render a stale tile's texture again (its colour-match regions are ready now)
         under the next revision's file name; the shape and its material name stay. Network trouble:
@@ -3110,10 +3130,12 @@ class Connection:
                 self.boost_t0 = time.monotonic()
                 self.s.load_boost(True, "teleport")
         anchor = self.s.new_anchor(lat, lon)
+        from roadintel_ext.runtime import bind_anchor
+        bind_anchor(self.s, anchor, self.road_geometry.dataset)
         self.status(f"Building terrain at {lat:.5f}, {lon:.5f}...")
         t0 = time.perf_counter()
         # a teleport's first block without its road plans, the graded one sent when built (make_provisional)
-        provisional = teleport and PROVISIONAL_FIRST and self.s.grading
+        provisional = teleport and PROVISIONAL_FIRST and self.s.grading and self.road_geometry.dataset is None
         if self.s.surface is not None and not provisional:
             # the anchor's first block is built once and kept while the player stands still: give the
             # land cover around it a moment to arrive (blocks built while driving never wait)
@@ -3231,6 +3253,11 @@ class Connection:
         if anchor is None:
             log.warning("commit of unknown anchor %r ignored", aid)
             return
+        if self.road_geometry.awaiting_anchor:
+            identity = self.road_geometry.dataset.identity if self.road_geometry.dataset is not None else None
+            if getattr(anchor, "roadintel_identity", None) != identity:
+                return  # old terrain cannot complete a new intelligence epoch
+            self.road_geometry.awaiting_anchor = False
         old = self.s.anchors.get(self.active)
         if old is not None:
             # Tiles of the old anchor stay visible (the mod moves them); track their
@@ -3389,7 +3416,7 @@ class Connection:
             self.s.warm_imagery(self.s.anchors[aid], *self.focus, *self.vel)
             self.s.download_ahead(self.s.anchors[aid], *self.focus, *self.vel)
             self.base_refresh(aid)
-        if self.s.mapdata is not None and aid == self.active:
+        if self.s.mapdata is not None and aid == self.active and not self.road_geometry.awaiting_anchor:
             self.roads.on_pose(self, aid, *self.focus, asyncio.get_running_loop(), self.road_geometry.builder(self.s),
                                vel=self.vel, ground_busy=self.terrain_wait > 0, view=self.view_at,
                                foci=self.foci)
@@ -3403,7 +3430,7 @@ class Connection:
         if self.s.buildings and aid == self.active:
             self.bldfar.on_pose(self, aid, *self.focus, asyncio.get_running_loop(), self.s.build_far_bld_tile,
                                 view=self.view_at)
-        if self.s.traffic and aid == self.active:
+        if self.s.traffic and aid == self.active and not self.road_geometry.awaiting_anchor:
             self.nav.on_pose(self, aid, *self.focus, asyncio.get_running_loop(), self.s.build_navgraph)
         if aid == self.active:
             self.send_progress(aid)

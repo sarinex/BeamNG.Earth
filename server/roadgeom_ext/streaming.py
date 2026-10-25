@@ -81,6 +81,7 @@ class Tracker(roads.Tracker):
 class Selection:
     def __init__(self, server=None):
         self.backend, self.epoch = "legacy", 0
+        self.intelligence, self.dataset, self.awaiting_anchor = "legacy", None, False
         self.token = secrets.token_hex(8)
         # Session + anchor + immutable parameters are the generated-file identity; raw map caches stay upstream's.
         config = {k: getattr(server, k, None) for k in
@@ -93,11 +94,12 @@ class Selection:
         self.namespace = self._namespace()
 
     def _namespace(self):
-        return f"roadgeom_{self.token}_{self.epoch}_{self.backend}_v{VERSION}_{self.config}"
+        return f"roadgeom_{self.token}_{self.epoch}_{self.backend}_{self.intelligence}_v{VERSION}_{self.config}"
 
     def capability(self):
         return {"version": 1, "backends": ["legacy", "geos"], "active": self.backend, "epoch": self.epoch,
-                "requestIds": True}
+                "requestIds": True, "intelligence": self.intelligence, "intelligenceBackends": ["legacy", "sumo"],
+                "coordinatedTerrain": True}
 
     def tracker(self):
         return Tracker(self.backend, self.epoch, self.namespace)
@@ -109,10 +111,20 @@ class Selection:
     def select(self, conn, msg):
         error = None
         requested = msg.get("backend")
+        intelligence = msg.get("intelligence", self.intelligence)
+        dataset = self.dataset
+        terrain_rebuild = intelligence != self.intelligence or bool(msg.get("rebuildTerrain"))
         request_id = msg.get("requestId")
         valid_id = isinstance(request_id, int) and not isinstance(request_id, bool) and 0 < request_id < 2**53
         try:
             validate(requested)
+            if intelligence not in ("legacy", "sumo"):
+                raise ValueError("road intelligence backend must be legacy or sumo")
+            if intelligence == "sumo" and (terrain_rebuild or dataset is None):
+                from roadintel_ext.runtime import Dataset
+                dataset = Dataset(os.environ.get("BNGE_ROADINTEL_DIR", ""))
+            elif intelligence == "legacy":
+                dataset = None
             if request_id is not None and not valid_id:
                 raise ValueError("invalid road geometry requestId")
             if msg.get("version") != 1:
@@ -130,10 +142,17 @@ class Selection:
         if error is None:
             conn.roads.close()
             self.backend, self.epoch = requested, self.epoch + 1
+            self.intelligence, self.dataset = intelligence, dataset
+            self.awaiting_anchor = terrain_rebuild
             self.namespace = self._namespace()
             conn.roads = self.tracker()
+            if hasattr(conn, "nav"):
+                from roadintel_ext.navigation import Tracker as NavTracker
+                conn.nav.close()
+                conn.nav = NavTracker(self.backend, self.epoch)
         response = {"type": "road_geometry_state", "version": 1, "backend": self.backend,
-                    "epoch": self.epoch, "ok": error is None, "error": error or ""}
+                    "epoch": self.epoch, "ok": error is None, "error": error or "",
+                    "intelligence": self.intelligence, "terrainRebuild": terrain_rebuild and error is None}
         if valid_id:
             response["requestId"] = request_id
         conn.send(response)

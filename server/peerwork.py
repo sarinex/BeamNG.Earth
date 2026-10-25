@@ -91,12 +91,13 @@ def source_id(server_dir=None):
         if name.endswith(".py"):
             with open(os.path.join(here, name), "rb") as f:
                 h.update(name.encode() + b"\0" + f.read())
-    extension = os.path.join(here, "roadgeom_ext")
-    if os.path.isdir(extension):
-        for name in sorted(os.listdir(extension)):
-            if name.endswith(".py"):
-                with open(os.path.join(extension, name), "rb") as f:
-                    h.update(("roadgeom_ext/" + name).encode() + b"\0" + f.read())
+    for package in ("roadgeom_ext", "roadintel_ext"):
+        extension = os.path.join(here, package)
+        if os.path.isdir(extension):
+            for name in sorted(os.listdir(extension)):
+                if name.endswith(".py"):
+                    with open(os.path.join(extension, name), "rb") as f:
+                        h.update((package + "/" + name).encode() + b"\0" + f.read())
     return h.hexdigest()[:16]
 
 

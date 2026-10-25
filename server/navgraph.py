@@ -110,6 +110,8 @@ def driving_width(spec):
     """The width of a road's driving lanes: the drawn carriageway (spec.width) less its parking lanes and edge
     strips (roads.carriageway adds them), i.e. the class's driving width capped by the drawn one; a four-lane
     urban arterial is all lanes."""
+    if spec.intel is not None:
+        return spec.intel.driving_width
     if spec.urban and not spec.oneway and spec.cls in roads.URBAN_ARTERIAL:
         return float(spec.width)
     w = roads.STYLE.get(spec.cls, roads.STYLE["unknown"])[0]
@@ -159,6 +161,7 @@ def build(frame, feats_list, elev, centre, urban_fn=None, window=WINDOW_M, decks
     measured street widths (roadwidth.py), so the AI's lanes are on the carriageway the road mesh draws."""
     cx, cy = centre
     nodes, edges, edge_fids, seen = {}, [], [], set()
+    intelligence_records = {}
     carriage = []           # (half width, centreline (k, 2)) of every road and bridge here (the signal heads keep off them)
     prop_arms = {}          # connector name -> [(fid, spec, unit vector away, point, end, length)] (the props' view)
     ring_cands = []         # the roads the road tiles draw (fid, spec, pts, None): roundabout rings (islands.ring_fids)
@@ -266,6 +269,10 @@ def build(frame, feats_list, elev, centre, urban_fn=None, window=WINDOW_M, decks
             if direction == 0 and spec.oneway and spec.dir:     # a divided road's carriageway (roads.dual_carriageways)
                 direction = int(spec.dir)
             lo, li = _lanes(w, direction != 0, spec.lanes)
+            if spec.intel is not None:
+                direction = spec.intel.direction
+                lo, li = ((spec.intel.backward, 0) if direction < 0 else
+                          (spec.intel.forward, spec.intel.backward))
             profile = _speed_profile(xy, w, direction != 0)
             # this road's approaches at its two ends (the graph node next to the junction, whether traffic comes in)
             for end in (0, -1):
@@ -291,6 +298,8 @@ def build(frame, feats_list, elev, centre, urban_fn=None, window=WINDOW_M, decks
                 target = min(legal, float(profile[j]), float(profile[j + 1]))
                 edges.append([a, b, 1 if direction else 0, lo, li, round(target, 2), driv, round(w / 2, 2)])
                 edge_fids.append(fid)
+                if getattr(feats, "_roadintel", None) is not None and spec.intel is not None:
+                    intelligence_records[id(edges[-1])] = feats._roadintel[i]
     import islands
     ring = islands.ring_directions(ring_cands, left_hand)
     ring_nodes = {nm for fid, e in zip(edge_fids, edges) if fid in ring for nm in e[:2]}
@@ -334,7 +343,11 @@ def build(frame, feats_list, elev, centre, urban_fn=None, window=WINDOW_M, decks
         if k not in pairs:
             pairs.add(k)
             uniq.append(e)
-    return {"nodes": nodes, "edges": uniq, "signals": signals}
+    graph = {"nodes": nodes, "edges": uniq, "signals": signals}
+    if intelligence_records:
+        from roadintel_ext.navigation import apply
+        graph = apply(graph, frame, intelligence_records)
+    return graph
 
 
 STOP_BACK_M = 2.0           # the stop point: this far before the junction's widest road edge

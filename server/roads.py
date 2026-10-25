@@ -122,8 +122,8 @@ def look_of(spec):
     if spec.kind == "paved" and spec.surf == "concrete":
         return CONCRETE
     return LOOK[spec.kind]
-Spec = namedtuple("Spec", "width kind urban cls oneway walk dir kmh gap median lanes surf",
-                  defaults=(False, 2.5, 0, None, None, None, None, None))   # median: m to the other carriageway's centre line
+Spec = namedtuple("Spec", "width kind urban cls oneway walk dir kmh gap median lanes surf intel",
+                  defaults=(False, 2.5, 0, None, None, None, None, None, None))   # intel: optional shared cross-section
 # (lanes: OpenStreetMap's lane count, both directions on a two-way road, None unknown: osmtags.py; surf: the surface
 # rule value's base token, e.g. "concrete": the look's concrete, roads.py look_of)
 # road_specs' result per feature (walk: the sidewalk width, measured from the buildings where known: roadwidth.py;
@@ -745,7 +745,8 @@ def road_specs(feats, urban_fn=None, widths=None, left_hand=False):
     k = (urban_fn, widths, bool(left_hand))     # a bound method equals another of the same object and function
     got = memo.get(k)
     if got is None:
-        got = memo[k] = _road_specs(feats, urban_fn, widths, left_hand)
+        from roadintel_ext.runtime import effective_specs
+        got = memo[k] = effective_specs(feats, _road_specs(feats, urban_fn, widths, left_hand))
     return list(got)
 
 
@@ -827,7 +828,8 @@ def bridge_specs(feats):
     None. No parking widths on bridges (urban False). Pure."""
     got = feats.__dict__.get("_bridge_specs")      # remembered: cells stay decoded (mapdata)
     if got is None:
-        got = feats.__dict__["_bridge_specs"] = _bridge_specs(feats)
+        from roadintel_ext.runtime import effective_specs
+        got = feats.__dict__["_bridge_specs"] = effective_specs(feats, _bridge_specs(feats))
     return list(got)
 
 
@@ -835,7 +837,8 @@ def tunnel_specs(feats):
     """Per feature: the Spec of a road with a tunnel range, else None (as bridge_specs). Pure."""
     got = feats.__dict__.get("_tunnel_specs")
     if got is None:
-        got = feats.__dict__["_tunnel_specs"] = _bridge_specs(feats, "tunnel")
+        from roadintel_ext.runtime import effective_specs
+        got = feats.__dict__["_tunnel_specs"] = effective_specs(feats, _bridge_specs(feats, "tunnel"))
     return list(got)
 
 
@@ -1574,6 +1577,9 @@ def sidewalk_stop(spec, fid, other, ofid):
 def extras(spec, pts, lon, left_hand=False):
     """The sidewalk / gutter / marking polylines of one road: [(look dict with m / tl / p, width, pts)].
     pts: its centreline (k, 3) in the anchor frame; lon: its longitude (centre line colour). Pure."""
+    if spec.intel is not None:
+        from roadintel_ext.model import markings
+        return markings(spec, pts, lon, left_hand)
     out = []
     w, kind, urban, cls = spec[:4]
     if kind not in BUILT:
