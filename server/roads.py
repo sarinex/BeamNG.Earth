@@ -1513,6 +1513,8 @@ ARTERIAL_GAP_M = 150.0          # ... or, with no limit, one with a junction thi
 
 
 def has_sidewalks(spec):
+    if spec.intel is not None and spec.intel.sidewalk_sides is not None:
+        return spec.kind in BUILT and bool(spec.intel.sidewalk_sides)
     # a two-way urban trunk is a town's main street on a state highway (Bishop's US-395, Moab's US-191);
     # divided trunks are one-way per carriageway: expressways get none, slow ones (Ocean City's Coastal
     # Highway, 35 mph, 2026-10-14 street photos) one on their outer side (walk_sides)
@@ -1532,6 +1534,8 @@ def walk_sides(spec, left_hand=False):
     """The sides (+1 left of the geometry, -1 right) of a road with sidewalks that get one: both, or a
     divided trunk carriageway's outer side only (the curb on the driver's right, left where they drive on
     the left; the other side is the median)."""
+    if spec.intel is not None and spec.intel.sidewalk_sides is not None:
+        return spec.intel.sidewalk_sides
     if (spec.cls == "trunk" or has_median(spec)) and spec.oneway:     # (a divided road's median: its curbed band)
         right = -1 if spec.dir >= 0 else 1
         return (-right,) if left_hand else (right,)
@@ -3645,6 +3649,9 @@ def build_tile(frame, tx, ty, cells, elev, urban_fn=None, walks=None, bridges=No
             roads.append((fid, spec, np.stack([e[k:k + m], n[k:k + m], u[k:k + m]], axis=1),
                           float(np.mean(ring[:, 0]))))
             k += m
+    if diagnostics is not None and any(hasattr(f, "_roadintel") for f in cells):
+        from roadintel_ext.runtime import diagnostics as intel_diagnostics
+        diagnostics["roadIntelligence"] = intel_diagnostics(cells, {fid: sp for fid, sp, _, _ in roads})
     chunks = []
     for fid, spec, pts, _ in roads:
         if ROADS_IN_GROUND:                     # the carriageway painted into the ground (surface.photo_roads)
@@ -3696,7 +3703,7 @@ def build_tile(frame, tx, ty, cells, elev, urban_fn=None, walks=None, bridges=No
         chunks = _off_wall_tops(chunks, [w for w in tile_walls if not w["rock"]])
     corners, jcuts, crosswalks, jramps, jlines, jinternal = ({}, {}, [], {}, {}, set()) if walks is None else \
         junctions.find(roads, has_sidewalks, None, PARKING_M,
-                       lambda sp: sp.urban and sp.cls in PARKING_CLASSES and sp.kind in BUILT and not sp.oneway
+                       lambda sp: sp.intel is None and sp.urban and sp.cls in PARKING_CLASSES and sp.kind in BUILT and not sp.oneway
                        and sp.width >= STYLE.get(sp.cls, STYLE["unknown"])[0] + 2 * PARKING_M - 0.1)
     # small road loops (roundabouts, turnaround loops): no sidewalks facing their inside, a curbed island instead
     import islands

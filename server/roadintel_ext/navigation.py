@@ -16,6 +16,7 @@ class Tracker(navgraph.Tracker):
     def __init__(self, backend="legacy", epoch=0):
         super().__init__()
         self.backend, self.epoch, self.closed = backend, epoch, False
+        self.serial = epoch * 1000000
 
     def close(self):
         self.closed = True

@@ -219,6 +219,11 @@ def build(frame, feats_list, elev, centre, urban_fn=None, window=WINDOW_M, decks
                             (fid, rspecs[i], dd / dl, np.array([p[j0][0], p[j0][1], 0.0]), end, L))
             if spec.cls not in DRIVE or roads._rule_value(sub, i) in SKIP_SUBCLASSES:
                 continue
+            rich = getattr(feats, "_roadintel", None)
+            if rich is not None:
+                tags = rich[i].get("tags", {})
+                if tags.get("motor_vehicle", tags.get("vehicle", tags.get("access"))) in ("no", "private"):
+                    continue
             tunnels = [(a_, b_) for a_, b_, k_ in roads.level_ranges(feats, i) if k_ == "tunnel"]
             # the nodes along it: connectors at their arc length, shape points that bend it, long gaps split
             marks = {}
@@ -257,6 +262,10 @@ def build(frame, feats_list, elev, centre, urban_fn=None, window=WINDOW_M, decks
                         full.append(sj)
             full.append(order[-1])
             xy = np.stack([np.interp(full, s, p[:, 0]), np.interp(full, s, p[:, 1])], 1)
+            if spec.intel is not None:
+                shift = (spec.intel.drive_left + spec.intel.drive_right) / 2
+                if abs(shift) > 1e-9:
+                    xy = roads.offset_polyline(np.c_[xy, np.zeros(len(xy))], shift)[:, :2]
             names = [marks[v] for v in full]
             # this road's edge attributes
             mid = 0.5

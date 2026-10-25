@@ -46,6 +46,10 @@ def curb_spots(roads, walks, box, left_hand=False, directions=None):
         if furniture._h01(fid, "park") >= STREET_SHARE:
             continue
         side = wk["side"]
+        if spec.intel is not None:
+            mapped = spec.intel.parking_left if side > 0 else spec.intel.parking_right
+            if mapped < 1.8:
+                continue
         if spec.width < BOTH_SIDES_M and side != (1 if furniture._h01(fid, "parkside") < 0.5 else -1):
             continue
         run = np.asarray(wk["pts"], np.float64)

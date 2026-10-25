@@ -57,6 +57,7 @@ class CrossSection:
     notes: tuple
     mapped_width: object
     envelope_width: float
+    sidewalk_sides: object = None
 
     @property
     def driving_width(self):
@@ -113,7 +114,11 @@ def normalize(tags, spec, *, reverse=False, left_hand=False, provenance="OSM ext
     for side in ("left", "right"):
         p = tags.get(f"parking:{side}", tags.get("parking:both", tags.get(f"parking:lane:{side}", tags.get("parking:lane:both"))))
         mapped = metres(tags.get(f"parking:{side}:width", tags.get("parking:both:width")))
-        parking.append((mapped if mapped is not None else 2.3) if p in ("lane", "parallel", "diagonal", "perpendicular") else 0.0)
+        if p is None:
+            parking.append(0.0)
+            notes.append(f"{side} parking mapping unavailable; no dedicated parking modeled")
+        else:
+            parking.append((mapped if mapped is not None else 2.3) if p in ("lane", "parallel", "diagonal", "perpendicular") else 0.0)
         if parking[-1] and mapped is None:
             notes.append(f"{side} parking width estimated")
         shoulder.append(metres(tags.get(f"shoulder:{side}:width", tags.get("shoulder:width"))) or 0.0)
@@ -158,9 +163,17 @@ def normalize(tags, spec, *, reverse=False, left_hand=False, provenance="OSM ext
     centre = boundaries[left_count - 1] if f and b else None
     dividers = tuple(v for j, v in enumerate(boundaries[:-1]) if j + 1 != left_count or centre is None)
     envelope = sum(widths) + sum(parking) + sum(shoulder)
+    sidewalk_sides = None
+    sidewalk = tags.get("sidewalk")
+    if sidewalk in ("no", "none", "separate", "both", "yes", "left", "right"):
+        sidewalk_sides = () if sidewalk in ("no", "none", "separate") else (1, -1) if sidewalk in ("both", "yes") else ((1,) if sidewalk == "left" else (-1,))
+    if "sidewalk:left" in tags or "sidewalk:right" in tags:
+        sidewalk_sides = tuple(side for side, name in ((1, "left"), (-1, "right")) if tags.get(f"sidewalk:{name}") == "yes")
+    if reverse and sidewalk_sides is not None:
+        sidewalk_sides = tuple(-side for side in sidewalk_sides)
     return CrossSection(f, b, direction, tuple(widths), tuple(offsets), dividers, centre, l, r,
-                        *parking, *shoulder, tf, tb, "mapped-counts/estimated-widths" if notes else "mapped",
-                        provenance, tuple(notes), mapped_width, envelope)
+                        *parking, *shoulder, tf, tb, "mapped-lane-widths" if raw or tags.get("width:lanes:forward") else "mapped-counts/estimated-widths",
+                        provenance, tuple(notes), mapped_width, envelope, sidewalk_sides)
 
 
 def markings(spec, pts, lon, left_hand=False):
@@ -169,6 +182,13 @@ def markings(spec, pts, lon, left_hand=False):
     section = spec.intel
     base = roads.extras(spec._replace(intel=None), pts, lon, left_hand)
     result = [row for row in base if row[0].get("side") is not None]
+    if section.sidewalk_sides is not None:
+        result = []
+        for side in section.sidewalk_sides:
+            result.append(({**roads.SIDEWALK, "side": side}, spec.walk,
+                           roads.offset_polyline(pts, side * (spec.width / 2 + spec.walk / 2))))
+            result.append(({**roads.GUTTER, "side": side}, roads.GUTTER["w"],
+                           roads.offset_polyline(pts, side * (spec.width / 2 - roads.GUTTER["w"] / 2))))
     if spec.kind != "paved":
         return result
     for offset in section.divider_offsets:

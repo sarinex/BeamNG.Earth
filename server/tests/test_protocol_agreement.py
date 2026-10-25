@@ -122,7 +122,7 @@ MOD_TO_SERVER = {
     "peers": {"me": F(str), "members": F(list)},
     # roads (roads.py; additive): the mod removed its roads (switched off and on again): send them again
     "roads_reset": {},
-    "road_geometry": {"version": F(int), "backend": F(str), "speed": F(NUM), "requestId": F(int, OPT)},
+    "road_geometry": {"version": F(int), "backend": F(str), "speed": F(NUM), "requestId": F(int, OPT), "intelligence": F(str, OPT), "rebuildTerrain": F(bool, OPT)},
     "map_tiles": {"tiles": F(list)},       # the world map's basemap tiles as files (settings.mapTiles)
     "geocode": {"id": F(int), "q": F(str), "lat": F(NUM, OPT), "lon": F(NUM, OPT)},   # the map's search box
     "route": {"id": F(int), "lat0": F(NUM), "lon0": F(NUM), "lat1": F(NUM), "lon1": F(NUM),
@@ -144,7 +144,7 @@ TERRAIN = {"cx": F(NUM), "cy": F(NUM), "heightmap": F(str), "size": F(int), "squ
            "base": F(str, OPT), "baseSize": F(NUM, OPT),           # --near-visual detail: the block's photo
            "ter": F(str, OPT)}                                     # the block as a .ter (swapped in, no import)
 SERVER_TO_MOD = {
-    "road_geometry_state": {"version": F(int), "backend": F(str), "epoch": F(int), "ok": F(bool), "error": F(str),
+    "road_geometry_state": {"intelligence": F(str, OPT), "terrainRebuild": F(bool, OPT), "version": F(int), "backend": F(str), "epoch": F(int), "ok": F(bool), "error": F(str),
                             "requestId": F(int, OPT)},
     "server_list": {"servers": F(list, OPT), "error": F(str, OPT)},   # earthd.server_list (the list service)
     "geocode_result": {"id": F(int), "results": F(list), "error": F(str, OPT)},   # geocode.py (Photon)
@@ -175,7 +175,7 @@ SERVER_TO_MOD = {
     "status": {"text": F(str),
                "backlog": F(int),           # v1.4 M0: desired - shown far tiles of the current anchor
                "radius": F(NUM, OPT)},      # v1.4 M1h: the far-field radius (m), --horizon only
-    "anchor_ready": {"requestId": F(int), "anchorId": F(int), "lat": F(NUM), "lon": F(NUM),
+    "anchor_ready": {"roadEpoch": F(int, OPT), "requestId": F(int), "anchorId": F(int), "lat": F(NUM), "lon": F(NUM),
                      "groundZ": F(NUM, NULL), "terrain": F(dict),
                      "floorZ": F(NUM, NULL, OPT),          # 2026-10-17: in a tunnel, its floor (core.floorCheck)
                      "anchorKey": F(str, OPT),             # phase 5 (lattice anchors): not sent yet
@@ -233,7 +233,7 @@ SERVER_TO_MOD = {
                     "slots": F(dict, OPT)},    # {"shape": [pooled shape path, serial]}
     "bldfar_drop": {"anchorId": F(int), "key": F(str)},
     # the AI road graph around the player (navgraph.py, --traffic on): a JSON file of nodes and edges
-    "navgraph": {"anchorId": F(int), "path": F(str), "cx": F(NUM), "cy": F(NUM), "nodes": F(int), "edges": F(int),
+    "navgraph": {"roadBackend": F(str, OPT), "roadEpoch": F(int, OPT), "anchorId": F(int), "path": F(str), "cx": F(NUM), "cy": F(NUM), "nodes": F(int), "edges": F(int),
                  "serial": F(int)},
     # the download cache's usage (cache.py; additive, with a Cache only): after hello and every mod 'cache'
     # ... its answer: the patch's shape and centre, or an error (the mod asks again later)

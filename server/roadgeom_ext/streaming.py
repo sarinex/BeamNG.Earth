@@ -82,6 +82,7 @@ class Selection:
     def __init__(self, server=None):
         self.backend, self.epoch = "legacy", 0
         self.intelligence, self.dataset, self.awaiting_anchor = "legacy", None, False
+        self.nav_required = bool(getattr(server, "traffic", False))
         self.token = secrets.token_hex(8)
         # Session + anchor + immutable parameters are the generated-file identity; raw map caches stay upstream's.
         config = {k: getattr(server, k, None) for k in
@@ -99,7 +100,7 @@ class Selection:
     def capability(self):
         return {"version": 1, "backends": ["legacy", "geos"], "active": self.backend, "epoch": self.epoch,
                 "requestIds": True, "intelligence": self.intelligence, "intelligenceBackends": ["legacy", "sumo"],
-                "coordinatedTerrain": True}
+                "coordinatedTerrain": True, "navEpochs": True, "navRequired": self.nav_required}
 
     def tracker(self):
         return Tracker(self.backend, self.epoch, self.namespace)

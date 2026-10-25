@@ -1123,7 +1123,7 @@ class Server:
         out_dir = os.path.join(self.out_dir, namespace) if namespace else self.out_dir
         vfs_dir = f"{self.vfs_dir}/{namespace}" if namespace else self.vfs_dir
         os.makedirs(out_dir, exist_ok=True)
-        diagnostics = {} if backend == "geos" else None
+        diagnostics = {} if backend == "geos" or hasattr(self.mapdata, "dataset") else None
         if self.road_pool is not None:
             t0 = time.perf_counter()
             res = self.road_pool.submit(
@@ -2613,7 +2613,8 @@ class Connection:
         self.bldfar = vegetationmod.Tracker(buildingsmod.FAR_SEND_M, buildingsmod.FAR_DROP_M,
                                             buildingsmod.FAR_PER_POSE, "bldfar",
                                             skip_m=roadsmod.SEND_M if self.s.mapdata is not None else None)
-        self.nav = navgraphmod.Tracker()        # the AI road graph around the player (--traffic on)
+        from roadintel_ext.navigation import Tracker as RoadIntelNavTracker
+        self.nav = RoadIntelNavTracker()        # shared generation epoch, including Legacy
         self.gravity = gravitymod.Tracker()     # real gravity: recompute rule, last message sent
         self.credits = creditsmod.Tracker()     # data credits: throttle, last message sent (--credits on)
         self.ground_busy = False                # a groundahead job is running (one at a time)
@@ -3101,6 +3102,8 @@ class Connection:
 
     async def prepare_anchor(self, msg):
         req = msg.get("requestId")
+        road_epoch = self.road_geometry.epoch
+        dataset = self.road_geometry.dataset
         try:
             lat, lon = float(msg["lat"]), float(msg["lon"])
             if not (math.isfinite(lat) and math.isfinite(lon) and -90 <= lat <= 90):
@@ -3131,7 +3134,7 @@ class Connection:
                 self.s.load_boost(True, "teleport")
         anchor = self.s.new_anchor(lat, lon)
         from roadintel_ext.runtime import bind_anchor
-        bind_anchor(self.s, anchor, self.road_geometry.dataset)
+        bind_anchor(self.s, anchor, dataset)
         self.status(f"Building terrain at {lat:.5f}, {lon:.5f}...")
         t0 = time.perf_counter()
         # a teleport's first block without its road plans, the graded one sent when built (make_provisional)
@@ -3182,6 +3185,8 @@ class Connection:
                  "groundZ": gz, "floorZ": floor_z, "terrain": self.terrain_msg(key, info), "provisional": provisional}
         if place is not None:           # (the player's spot off the origin, echoed: core places the car there)
             ready["px"], ready["py"] = place
+        if road_epoch:
+            ready["roadEpoch"] = road_epoch
         self.send(ready)
         self.status(f"Terrain ready ({time.perf_counter() - t0:.1f} s)")
         if provisional:

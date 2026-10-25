@@ -41,10 +41,13 @@ class Dataset:
         self.directory = Path(directory).resolve()
         self.refs = {}
         for path in sorted(self.directory.glob("region_*.ref")):
-            name = path.read_text(encoding="utf-8").strip()
+            content = path.read_text(encoding="utf-8").split()
+            if len(content) != 2:
+                raise ValueError("invalid road intelligence cache pointer")
+            name, checksum = content
             if Path(name).name != name or not name.endswith(".json"):
                 raise ValueError("invalid road intelligence cache pointer")
-            self.refs[path.stem[7:]] = name
+            self.refs[path.stem[7:]] = (name, checksum)
         if not self.refs:
             raise ValueError("No prepared regions; run tools/prepare_roadintel.py and set BNGE_ROADINTEL_DIR")
         self.identity = hashlib.sha256(json.dumps(self.refs, sort_keys=True).encode()).hexdigest()
@@ -59,14 +62,18 @@ class Dataset:
                 self.loaded.move_to_end(key)
                 return self.loaded[key]
             self.stats["misses"] += 1
-            name = self.refs.get(key)
-            if not name:
+            ref = self.refs.get(key)
+            if not ref:
                 return None
+            name, checksum = ref
             path = self.directory / name
             if path.stat().st_size > MAX_OUTPUT:
                 raise ValueError("region cache exceeds budget")
-            data = json.loads(path.read_bytes())
-            if data.get("version") != VERSION or data.get("sumo") != "1.28.0" or data.get("revision") not in name:
+            raw = path.read_bytes()
+            if hashlib.sha256(raw).hexdigest() != checksum:
+                raise ValueError("road intelligence cache checksum mismatch")
+            data = json.loads(raw)
+            if data.get("version") != VERSION or data.get("sumo") != "1.28.0" or name != f"region_{key}_{data.get('revision')}.json":
                 raise ValueError("unsupported or mismatched road intelligence cache")
             self.loaded[key] = data
             while len(self.loaded) > 4:
@@ -91,6 +98,15 @@ class Dataset:
             raise ValueError("extract traffic handedness disagrees with country rules")
         source = data["ways"][str(wid)]
         dist, at = project(ll, source["shape"])
+        source_line = np.asarray(source["shape"], float)
+        closed = np.allclose(ll[0], ll[-1], atol=1e-10, rtol=0) and np.allclose(source_line[0], source_line[-1], atol=1e-10, rtol=0)
+        if closed:
+            def area(line):
+                p = line - line[0]
+                return float(np.sum(p[:-1, 0] * p[1:, 1] - p[1:, 0] * p[:-1, 1]))
+            reverse = area(ll) * area(source_line) < 0
+            at = np.unwrap(at * 2 * np.pi) / (2 * np.pi)
+            at[-1] = at[0] + (-1 if reverse else 1)
         if float(dist.max()) > 6 or abs(at[-1] - at[0]) < 1e-5:
             raise ValueError("OSM way geometry does not match Overture feature")
         reverse = at[-1] < at[0]
@@ -150,12 +166,49 @@ def effective_specs(feats, specs):
         try:
             section = normalize(record["tags"], spec, reverse=record["reverse"],
                                 left_hand=record["region"]["leftHand"], provenance=record["provenance"])
+            for eid, native in record["region"].get("edges", {}).items():
+                if native["way"] != record.get("way"):
+                    continue
+                forward = not eid.startswith("-")
+                if record["reverse"]:
+                    forward = not forward
+                expected = section.forward if forward else section.backward
+                if native["lanes"] != expected:
+                    raise ValueError("SUMO passenger lanes disagree with mapped section (reserved lanes or lane transition)")
+            import roads
+            raw_speed = record["tags"].get("maxspeed", "")
+            try:
+                speed = float(raw_speed[:-3].strip()) * 1.609344 if raw_speed.endswith("mph") else float(raw_speed)
+            except ValueError:
+                speed = spec.kmh
+            surface = record["tags"].get("surface")
             out[i] = spec._replace(width=section.envelope_width, lanes=section.forward + section.backward,
-                                  oneway=section.direction != 0, dir=section.direction, intel=section)
+                                  oneway=section.direction != 0, dir=section.direction, intel=section,
+                                  kmh=speed if speed is not None and 5 <= speed <= 200 else spec.kmh,
+                                  kind=roads.surface_kind(spec.cls, surface) if surface else spec.kind,
+                                  surf=roads.surface_token(surface) if surface else spec.surf)
         except ValueError as exc:
             # This clone belongs to this immutable profile; store diagnostics, not guesses.
             record["layoutFallback"] = str(exc)
     return out
+
+
+def diagnostics(cells, specs_by_id):
+    sections, fallbacks = {}, {}
+    for feats in cells:
+        records = getattr(feats, "_roadintel", None)
+        if records is None:
+            continue
+        for i, record in enumerate(records):
+            fid = str(feats.ids[i])
+            if fid not in specs_by_id:
+                continue
+            spec = specs_by_id[fid]
+            if spec.intel is not None:
+                sections[fid] = spec.intel.diagnostic()
+            else:
+                fallbacks[fid] = record.get("error", record.get("layoutFallback", "unsupported section"))
+    return {"backend": "sumo", "sections": sections, "fallbacks": fallbacks}
 
 
 def bind_anchor(server, anchor, dataset):

@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
+import multiprocessing
 
 from . import VERSION
 
@@ -50,6 +51,13 @@ def extract(source, bounds, target):
     ways, relations, needed = {}, [], set()
 
     class Ways(osmium.SimpleHandler):
+        seen_nodes = 0
+
+        def node(self, n):
+            self.seen_nodes += 1
+            if self.seen_nodes > MAX_NODES * 4:
+                raise ValueError("extract exceeds node budget; use a smaller complete extract")
+
         def way(self, w):
             if "highway" not in w.tags:
                 return
@@ -75,7 +83,17 @@ def extract(source, bounds, target):
                     raise ValueError("extract exceeds restriction budget; use a smaller extract")
 
     idx = str(Path(target).with_suffix(".idx"))
-    Ways().apply_file(str(source), locations=True, idx=f"sparse_file_array,{idx}")
+    # Own the index and Reader lifetimes: SimpleHandler.apply_file's implicit
+    # location handler can retain the mmap until GC on Windows.
+    handler = Ways()
+    location_index = osmium.index.create_map(f"sparse_file_array,{idx}")
+    locations = osmium.NodeLocationsForWays(location_index)
+    locations.ignore_errors()
+    with osmium.io.Reader(str(source)) as reader:
+        osmium.apply(reader, locations, handler)
+    del locations, location_index, handler
+    import gc
+    gc.collect()
     root = ET.Element("osm", version="0.6", generator="BeamNG.Earth roadintel")
     missing = set(needed)
 
@@ -115,8 +133,11 @@ def extract(source, bounds, target):
 
 def convert(osm, output, left_hand=False, timeout=90, runner=subprocess.run):
     cmd = [str(executable()), "--osm-files", str(osm), "--output-file", str(output),
+           "--plain-output-prefix", str(output) + ".plain", "--proj.plain-geo", "true",
            "--osm.turn-lanes", "true", "--osm.lane-access", "true", "--osm.all-attributes", "true",
            "--geometry.remove", "false", "--junctions.join", "false", "--roundabouts.guess", "false",
+           "--osm.skip-duplicates-check", "true",
+           "--junctions.join-same", "-1",
            "--no-turnarounds", "true", "--lefthand", str(bool(left_hand)).lower(), "--no-warnings", "false"]
     # File logs bound pipe RAM; subprocess has no shell and an explicit deadline.
     with tempfile.TemporaryFile() as log:
@@ -137,6 +158,14 @@ def convert(osm, output, left_hand=False, timeout=90, runner=subprocess.run):
 def read_network(path, ways):
     import sumolib
     net = sumolib.net.readNet(str(path), withInternal=False)
+    prefix = str(path) + ".plain"
+    points = {el.attrib["id"]: (float(el.attrib["x"]), float(el.attrib["y"]))
+              for el in ET.parse(prefix + ".nod.xml").getroot().findall("node")}
+    geo_edges = {}
+    for el in ET.parse(prefix + ".edg.xml").getroot().findall("edge"):
+        a = el.attrib
+        geo_edges[a["id"]] = ([tuple(map(float, p.split(",")[:2])) for p in a["shape"].split()]
+                              if a.get("shape") else [points[a["from"]], points[a["to"]]])
     edges = {}
     for edge in sorted(net.getEdges(), key=lambda x: x.getID()):
         eid = edge.getID()
@@ -146,14 +175,29 @@ def read_network(path, ways):
         lanes = [lane for lane in edge.getLanes() if lane.allows("passenger")]
         if not lanes:
             continue
-        edges[eid] = {"way": wid, "from": edge.getFromNode().getID(), "to": edge.getToNode().getID(),
-                      "shape": [net.convertXY2LonLat(*p[:2]) for p in edge.getRawShape()],
+        # SUMO can merge coincident OSM nodes even with junction joining disabled.
+        # Recover the original node references and reject such cross-level turns.
+        original = ways[wid]
+        def source_node(point):
+            distances = [math.hypot((q[0] - point[0]) * math.cos(math.radians(point[1])), q[1] - point[1]) * 111320
+                         for q in original["shape"]]
+            best = min(distances)
+            ids = {str(original["nodes"][j]) for j, d in enumerate(distances) if d <= best + 0.01}
+            if best > 0.5 or len(ids) != 1:
+                raise ValueError("SUMO edge endpoint cannot be traced uniquely to an OSM node")
+            return ids.pop()
+        shape = geo_edges[eid]
+        edges[eid] = {"way": wid, "from": source_node(shape[0]), "to": source_node(shape[-1]),
+                      "nativeFrom": edge.getFromNode().getID(), "nativeTo": edge.getToNode().getID(),
+                      "shape": geo_edges[eid],
                       "lanes": len(lanes), "speed": edge.getSpeed(), "priority": edge.getPriority()}
     connections = []
     for eid in sorted(edges):
         edge = net.getEdge(eid)
         for dest, conns in edge.getOutgoing().items():
             if dest.getID() not in edges:
+                continue
+            if edges[eid]["to"] != edges[dest.getID()]["from"]:
                 continue
             for c in conns:
                 if c.getFromLane().allows("passenger") and c.getToLane().allows("passenger"):
@@ -164,7 +208,28 @@ def read_network(path, ways):
     return edges, sorted(connections, key=lambda c: (c["from"], c["to"], c["fromLane"], c["toLane"]))
 
 
+def _extract_worker(source, bounds, osm, result):
+    try:
+        ways, diagnostics = extract(source, bounds, osm)
+        Path(result).write_text(json.dumps({"ways": ways, "diagnostics": diagnostics}), encoding="utf-8")
+    except Exception as exc:
+        Path(result).write_text(json.dumps({"error": f"{type(exc).__name__}: {exc}"}), encoding="utf-8")
+
+
+def _write_pointer(directory, key, dest):
+    pointer = directory / f"region_{key}.ref"
+    tmp = pointer.with_suffix(f".{os.getpid()}.tmp")
+    tmp.write_text(dest.name + " " + digest(dest), encoding="utf-8")
+    os.replace(tmp, pointer)
+
+
 def preprocess(source, directory, lat, lon, *, left_hand=False, timeout=90):
+    from importlib.metadata import version
+    for package, expected in (("eclipse-sumo", "1.28.0"), ("sumolib", "1.28.0"), ("osmium", "4.3.2")):
+        if version(package) != expected:
+            raise ValueError(f"{package} must be {expected}; use requirements-roadintel-ext.txt")
+    if Path(source).stat().st_size > 512 * 1024 * 1024:
+        raise ValueError("extract exceeds 512 MiB input budget; supply a smaller extract")
     key, core = region(lat, lon)
     bounds = (core[0] - HALO_DEG, core[1] - HALO_DEG, core[2] + HALO_DEG, core[3] + HALO_DEG)
     identity = {"version": VERSION, "sumo": "1.28.0", "sourceSha256": digest(source), "core": core,
@@ -175,10 +240,31 @@ def preprocess(source, directory, lat, lon, *, left_hand=False, timeout=90):
     name = f"region_{key}_{revision}.json"
     dest = directory / name
     if dest.is_file():
+        _write_pointer(directory, key, dest)
         return dest, True
+    if sum(p.stat().st_size for p in directory.glob("*.json")) + MAX_OUTPUT > 2 * 1024**3:
+        raise ValueError("road intelligence disk budget (2 GiB) reached; prune unused regions while server is stopped")
     with tempfile.TemporaryDirectory(prefix="roadintel-") as work:
         osm, output = Path(work) / "region.osm.xml", Path(work) / "region.net.xml"
-        ways, diagnostics = extract(source, bounds, osm)
+        # Process lifetime closes libosmium's file-backed index on Windows too.
+        # One bounded worker, not a persistent runtime/tile conversion service.
+        result = Path(work) / "extract.json"
+        worker = multiprocessing.get_context("spawn").Process(target=_extract_worker, args=(source, bounds, osm, result))
+        worker.start()
+        worker.join(timeout)
+        if worker.is_alive():
+            worker.terminate()
+            worker.join(5)
+            if worker.is_alive():
+                worker.kill()
+                worker.join()
+            raise ValueError(f"OSM extraction timed out after {timeout}s")
+        if worker.exitcode or not result.is_file():
+            raise ValueError(f"OSM extraction failed ({worker.exitcode})")
+        payload = json.loads(result.read_text(encoding="utf-8"))
+        if "error" in payload:
+            raise ValueError(payload["error"])
+        ways, diagnostics = payload["ways"], payload["diagnostics"]
         report = convert(osm, output, left_hand, timeout)
         edges, connections = read_network(output, ways)
         data = dict(identity, revision=revision, ways=ways, edges=edges, connections=connections,
@@ -190,8 +276,5 @@ def preprocess(source, directory, lat, lon, *, left_hand=False, timeout=90):
         tmp.write_bytes(raw)
         os.replace(tmp, dest)
     # One atomic pointer per deterministic core. Old content-addressed revisions can be pruned offline.
-    pointer = directory / f"region_{key}.ref"
-    tmp = pointer.with_suffix(f".{os.getpid()}.tmp")
-    tmp.write_text(name, encoding="utf-8")
-    os.replace(tmp, pointer)
+    _write_pointer(directory, key, dest)
     return dest, False
