@@ -834,7 +834,7 @@ local function onMessage(msg)
   elseif t == 'roads_drop' then
     if roadgeom.accept(msg) then roads.onDrop(msg) end
   elseif t == 'road_geometry_state' then
-    local restoreBackend = roadgeom.state(msg, function(state)
+    local restoreBackend, restoreIntelligence = roadgeom.state(msg, function(state)
       roads.retireGeometry()
       navgraph.retireIntelligence()
       if state.terrainRebuild then
@@ -843,6 +843,7 @@ local function onMessage(msg)
       end
     end)
     if restoreBackend then settings.set('roadGeometryBackend', restoreBackend) end
+    if restoreIntelligence then settings.set('roadIntelligenceBackend', restoreIntelligence) end
   elseif t == 'far_tile' then
     farfield.onTile(msg)
   elseif t == 'far_swap' then

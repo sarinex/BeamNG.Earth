@@ -1038,5 +1038,49 @@
     "35 Python skips cover Linux-only checks, unavailable game/GPU/resource/FIFO tools, standalone LuaJIT discovery, and optional gravity-download/timing opt-ins. Lua was also tested separately through Lupa. No skip is represented as a passed assertion.",
     "Benchmarks are synthetic offline measurements over nine fixtures and all four backend combinations, seven repeats, real netconvert, and fresh terrain builds. No real-world screenshots, AI behavior, game frame times, Linux smoke run, or frozen-SUMO packaging validation is claimed.",
     "Neither BeamNG.drive nor the SUMO simulator was launched or controlled. Legacy defaults and original/Group 1 requirement files are unchanged."
+  ],
+  "followups": [
+    {
+      "issue": "Rejected intelligence request requeued by geometry settings callback",
+      "sourceId": "40598a3d9842679a-68",
+      "status": "Fixed and verified offline; user in-game retest pending",
+      "reproducedBeforeFix": "Two new standalone state assertions failed; the fix also adds actual core/settings callback coverage.",
+      "changes": [
+        "Restore both desired and persisted accepted preferences on rejection, without retiring working roads.",
+        "Preserve a newer user choice or cancellation while awaiting a rejected request.",
+        "Acknowledge prepared-data OSError failures and log every accepted/rejected switch with its reason."
+      ],
+      "pythonTests": [
+        {
+          "module": "test_roadintel",
+          "tests": 27,
+          "outcome": "OK",
+          "log": "build/test-logs-roadintel-rejection/test_roadintel.log",
+          "logSha256": "278602136fcac9645087dc86b0fc9b98364eb4a01bbc608ae9f9d61a545def15"
+        },
+        {
+          "module": "test_roadgeom_ext",
+          "tests": 25,
+          "outcome": "OK",
+          "log": "build/test-logs-roadintel-rejection/test_roadgeom_ext.log",
+          "logSha256": "15bbbd2f699581cbc3cec1eafea56b22faa2cfbdab10f35999289e0a39668ad1"
+        },
+        {
+          "module": "test_cli_default",
+          "tests": 2,
+          "outcome": "OK",
+          "log": "build/test-logs-roadintel-rejection/test_cli_default.log",
+          "logSha256": "20c94666f628af135c49d7f704bb7ea62eb315a18ce0695e97e6965a1335e639"
+        }
+      ],
+      "luaTests": {
+        "suites": 61,
+        "passedAssertions": 5316,
+        "failedAssertions": 0,
+        "log": "build/roadintel-rejection-lua.log",
+        "logSha256": "7489cd1c8c20175defc950fd25fa1c4de08d3833772f982fdd6e715d34a479b6"
+      },
+      "qualification": "Original full-suite and benchmark records above retain their historical source fingerprints. No active game or server was controlled or changed."
+    }
   ]
 }

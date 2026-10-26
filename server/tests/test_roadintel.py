@@ -1,5 +1,6 @@
 """Offline Group 4 contracts, including real pinned netconvert (no simulator/game)."""
 from dataclasses import replace
+from contextlib import nullcontext
 import json
 import os
 from pathlib import Path
@@ -354,6 +355,28 @@ class NativeNetworkContracts(unittest.TestCase):
 
 
 class CoordinatedTerrain(unittest.TestCase):
+    def test_missing_or_unreadable_prepared_regions_return_a_rejection(self):
+        from roadgeom_ext.streaming import Selection
+        server = SimpleNamespace(mapdata=object(), surface=object())
+        with tempfile.TemporaryDirectory() as empty:
+            for error in (None, PermissionError("prepared region is unreadable")):
+                selected = Selection(server)
+                sent = []
+                tracker = selected.tracker()
+                conn = SimpleNamespace(roads=tracker, send=sent.append)
+                with patch.dict(os.environ, {"BNGE_ROADINTEL_DIR": empty}):
+                    with patch("roadintel_ext.runtime.open_dataset", side_effect=error) if error else nullcontext():
+                        with self.assertLogs("earthd.roadgeom", level="WARNING") as logs:
+                            selected.select(conn, {"version": 1, "backend": "legacy", "intelligence": "sumo",
+                                                   "speed": 0, "requestId": 7})
+                self.assertFalse(sent[-1]["ok"])
+                self.assertEqual(sent[-1]["requestId"], 7)
+                self.assertIn("unreadable" if error else "No prepared regions", sent[-1]["error"])
+                self.assertIn("rejected", logs.output[0])
+                self.assertEqual((selected.backend, selected.intelligence, selected.epoch), ("legacy", "legacy", 0))
+                self.assertIs(conn.roads, tracker)
+                self.assertFalse(tracker.closed)
+
     def test_selection_requires_terrain_surface_support(self):
         from roadgeom_ext.streaming import Selection
         for server in (None, SimpleNamespace(mapdata=object(), surface=None),

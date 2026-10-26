@@ -38,6 +38,10 @@ Repeat preparation for cores covering the intended route; use `--left-hand` for 
 
 Selecting SUMO requires the server's roads and terrain surfaces to be enabled. Selection without prepared regions is rejected and preserves the previous accepted backend. Missing coverage, bad checksums, mismatched driving side, incomplete lane counts or ambiguous correspondence fall back per feature/junction and are reported. Legacy selection does not scan or load the regional dataset. A missing preprocessing executable produces an explicit error; existing prepared data can still be used without installing SUMO on a runtime-only server.
 
+Installing the pinned packages does not prepare any real-world road data. Until a complete source extract has been prepared and `BNGE_ROADINTEL_DIR` points to its output in the shell that launches `start.py`, use Legacy intelligence; GEOS geometry remains independently available. A rejection now restores both selectors to their accepted values once and keeps its reason visible. Accepted/rejected switch requests are logged by `earthd.roadgeom`, including preparation and file-access errors.
+
+The initial Group 4 build had a rejected-request loop: restoring the accepted geometry through the settings callback requeued the still-requested SUMO intelligence, hiding the error behind “Waiting for server.” The follow-up fix restores both internal/persisted preferences atomically and preserves any newer user choice. It is covered through the actual core/settings callbacks in the stubbed test, not just the standalone state machine. To load updated mod code, close the game and server yourself, run `python start.py` to refresh the installed mod, and reopen the game. No running game or server is controlled by the fix.
+
 ## Audit of the existing system
 
 | Existing component | Existing responsibility and assumptions | Extension boundary |

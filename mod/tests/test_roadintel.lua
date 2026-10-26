@@ -64,4 +64,29 @@ m.progress({roads={5,5},roadGeometry={epoch=8,failed=0}}); m.update(.1,ctx)
 T.check(not paused and not held and not m.intelligenceStatus().terrainBlocked, 'successful terrain restoration releases only the owned hold')
 m.hello(nil,'legacy','sumo')
 T.check(not m.requestIntelligence('sumo') and m.intelligenceStatus().active=='legacy', 'old servers retain Legacy')
+
+-- The settings adapter applies the returned accepted geometry after rejection.
+-- An unchanged geometry must not requeue a rejected intelligence preference.
+m.hello({version=1,active='geos',intelligence='legacy',epoch=0,requestIds=true,
+  coordinatedTerrain=true,navEpochs=true,navRequired=false},'geos','sumo')
+ctx.safe=true; settled=true
+local requests=#sent
+m.update(1.1,ctx); request=sent[#sent]
+local restore,restoreIntel=m.state({ok=false,backend='geos',intelligence='legacy',epoch=0,
+  requestId=request.requestId,error='No prepared regions; run tools/prepare_roadintel.py'},function() error('rejection must not retire roads') end)
+if restore then m.request(restore) end -- settings.set('roadGeometryBackend', restore)
+if restoreIntel then m.requestIntelligence(restoreIntel) end
+for _=1,5 do m.update(1.1,ctx) end
+T.check(#sent==requests+1 and not paused and not held, 'rejected intelligence stays idle after settings callbacks')
+T.check(m.intelligenceStatus().desired=='legacy' and m.intelligenceStatus().active=='legacy'
+  and m.intelligenceStatus().text:find('No prepared regions'), 'rejection restores the intelligence preference and retains its actionable error')
+m.requestIntelligence('sumo'); m.update(1.1,ctx); request=sent[#sent]
+m.requestIntelligence('legacy') -- user cancels before the rejection arrives
+requests=#sent
+restore,restoreIntel=m.state({ok=false,backend='geos',intelligence='legacy',epoch=0,
+  requestId=request.requestId,error='No prepared regions'},function() error('rejection must not retire roads') end)
+T.check(restore==nil and restoreIntel==nil, 'rejection does not overwrite a newer user choice through settings')
+m.update(1.1,ctx)
+T.check(#sent==requests and m.intelligenceStatus().desired=='legacy' and not paused and not held,
+  'cancelling the intelligence request stays cancelled after rejection')
 T.done('test_roadintel')

@@ -92,6 +92,7 @@ function M.state(msg, retire)
   if msg.ok and msg.backend ~= awaiting.backend then return end
   if msg.ok and msg.intelligence and msg.intelligence ~= awaiting.intelligence then return end
   local live = phase == 'request' and held
+  local requested = awaiting
   awaiting = nil
   serverKnown = true
   if msg.backend then accepted = msg.backend end
@@ -107,11 +108,17 @@ function M.state(msg, retire)
   end
   if not msg.ok then
     local reason = tostring(msg.error or 'Road geometry request rejected')
-    if incomplete or active ~= accepted then
+    if incomplete or active ~= accepted or intelActive ~= intelAccepted then
       markIncomplete(reason .. '; select a generator to retry or restore ' .. lastLoaded)
     else
-      desired, pending, phase, failure, text = accepted, nil, nil, reason, reason
-      return accepted
+      local queued = desired ~= requested.backend or intelDesired ~= requested.intelligence
+      pending, phase, failure, text = nil, nil, reason, reason
+      if queued then
+        M.request(desired) -- preserve a newer user choice made while awaiting the answer
+      else
+        desired, intelDesired = accepted, intelAccepted
+        return accepted, intelSupported and intelAccepted or nil
+      end
     end
     return
   end

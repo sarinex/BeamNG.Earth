@@ -828,6 +828,26 @@ do
   selection.hello({version=1,active='legacy',intelligence='legacy',epoch=0,requestIds=true,
     coordinatedTerrain=true,navEpochs=true,navRequired=false}, 'legacy', 'legacy')
   local request
+  local settings = require('beamngEarth/settings')
+  local previousCore = rawget(_G,'beamngEarth_core')
+  _G.beamngEarth_core=core -- exercise the real settings callbacks, as in the engine
+  settings.set('roadGeometryBackend','legacy')
+  settings.set('roadIntelligenceBackend','sumo')
+  selection.update(1.1,{connected=true,speed=0,safe=true,multiplayer=false,
+    roads={setHold=function() end},paused=function() return false end,pause=function() end,
+    settled=function() return false end,send=function(msg) request=msg end})
+  local requests=#received('road_geometry')
+  serverSend({type='road_geometry_state',ok=false,backend='legacy',intelligence='legacy',epoch=0,
+    requestId=request.requestId,error='No prepared regions; run tools/prepare_roadintel.py'})
+  frame(true)
+  frames(30)
+  T.check(settings.get('roadIntelligenceBackend')=='legacy' and settings.get('roadGeometryBackend')=='legacy',
+    'rejection restores both persisted selectors through their real callbacks')
+  T.check(#received('road_geometry')==requests and not selection.status().pending and not selection.status().phase,
+    'real core/settings rejection handling does not start another request')
+  T.check(selection.intelligenceStatus().text:find('No prepared regions'),
+    'core preserves the actionable rejection instead of replacing it with waiting')
+  _G.beamngEarth_core=previousCore
   selection.requestIntelligence('sumo')
   selection.update(1.1,{connected=true,speed=0,safe=true,multiplayer=false,
     roads={setHold=function() end},paused=function() return false end,pause=function() end,

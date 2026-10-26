@@ -3,6 +3,7 @@ from functools import partial
 import hashlib
 import glob
 import json
+import logging
 import math
 import os
 import secrets
@@ -143,7 +144,7 @@ class Selection:
             speed = msg.get("speed")
             if not isinstance(speed, (float, int)) or not math.isfinite(speed) or speed > 0.25 or speed < 0:
                 raise ValueError("road geometry switch requires a stationary vehicle")
-        except (ValueError, TypeError) as exc:
+        except (ValueError, TypeError, OSError) as exc:
             error = str(exc)
         if error is None:
             conn.roads.close()
@@ -161,4 +162,11 @@ class Selection:
                     "intelligence": self.intelligence, "terrainRebuild": terrain_rebuild and error is None}
         if valid_id:
             response["requestId"] = request_id
+        log = logging.getLogger("earthd.roadgeom")
+        if error:
+            log.warning("road switch request %s rejected (%s geometry, %s intelligence): %s",
+                        request_id, requested, intelligence, error)
+        else:
+            log.info("road switch request %s accepted: %s geometry, %s intelligence, epoch %s, terrain rebuild %s",
+                     request_id, self.backend, self.intelligence, self.epoch, terrain_rebuild)
         conn.send(response)
