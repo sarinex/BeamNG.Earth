@@ -68,7 +68,7 @@ class Dataset:
         self.stats = {"hits": 0, "misses": 0, "matched": 0, "fallbacks": 0}
 
     def get(self, lat, lon):
-        key, _ = region(lat, lon)
+        key, core = region(lat, lon)
         with self.lock:
             if key in self.loaded:
                 self.stats["hits"] += 1
@@ -86,8 +86,15 @@ class Dataset:
             if hashlib.sha256(raw).hexdigest() != checksum:
                 raise ValueError("road intelligence cache checksum mismatch")
             data = json.loads(raw)
-            if data.get("version") != VERSION or data.get("sumo") != "1.28.0" or name != f"region_{key}_{data.get('revision')}.json":
+            if (data.get("version") != VERSION or data.get("sumo") != "1.28.0"
+                    or tuple(data.get("core", ())) != tuple(core)
+                    or name != f"region_{key}_{data.get('revision')}.json"):
                 raise ValueError("unsupported or mismatched road intelligence cache")
+            data["_edges_by_way"], data["_connections_by_from"] = {}, {}
+            for eid, edge in data["edges"].items():
+                data["_edges_by_way"].setdefault(edge["way"], {})[eid] = edge
+            for connection in data["connections"]:
+                data["_connections_by_from"].setdefault(connection["from"], []).append(connection)
             self.loaded[key] = data
             while len(self.loaded) > 4:
                 self.loaded.popitem(last=False)
@@ -128,14 +135,43 @@ class Dataset:
         tags = source["tags"]
         if tags.get("placement", "center") not in ("center", ""):
             raise ValueError("mapped placement requires an independently validated geometry correction")
-        return {"way": str(wid), "tags": tags, "reverse": bool(reverse), "region": data,
+        return {"way": str(wid), "tags": tags, "reverse": bool(reverse), "region": RegionRef(self, float(mid[1]), float(mid[0])),
                 "provenance": f"OSM w{wid}@{source['version']} / {data['sourceSha256']}"}
+
+
+class RegionRef:
+    """A pinned lookup, not a strong reference bypassing the four-region payload LRU."""
+    def __init__(self, dataset, lat, lon):
+        self.dataset, self.location = dataset, (lat, lon)
+
+    def __getitem__(self, name):
+        return self.dataset.get(*self.location)[name]
+
+    def get(self, name, default=None):
+        return self.dataset.get(*self.location).get(name, default)
+
+
+def native_edges(record):
+    data = record["region"]
+    index = data.get("_edges_by_way")
+    if index is not None:
+        return index.get(record.get("way"), {})
+    return {eid: edge for eid, edge in data.get("edges", {}).items() if edge["way"] == record.get("way")}
+
+
+def native_connections(data, from_edges):
+    index = data.get("_connections_by_from")
+    if index is not None:
+        return [connection for eid in sorted(set(from_edges)) for connection in index.get(eid, ())]
+    keep = set(from_edges)
+    return [c for c in data.get("connections", ()) if c["from"] in keep]
 
 
 class MapView:
     """Copy only feature containers, never mutate upstream cached cells or geometry."""
-    def __init__(self, base, dataset, left_hand=False):
+    def __init__(self, base, dataset, left_hand=False, urban_fn=None, widths=None):
         self.base, self.dataset, self.left_hand = base, dataset, bool(left_hand)
+        self.urban_fn, self.widths = urban_fn, widths
         self.memo, self.lock = OrderedDict(), threading.RLock()
 
     def __getattr__(self, name):
@@ -152,11 +188,15 @@ class MapView:
             if cached is None or cached[0] is not f:
                 clone = replace(f, attrs=dict(f.attrs), rules=dict(f.rules))
                 clone._roadintel = []
+                import roads
+                baseline = {"ground": roads.road_specs(f, self.urban_fn, self.widths, self.left_hand),
+                            "bridge": roads.bridge_specs(f), "tunnel": roads.tunnel_specs(f)}
                 for i in range(len(f)):
                     try:
                         rec = self.dataset.match(f, i, self.left_hand)
                     except (ValueError, OSError, KeyError, TypeError) as exc:
                         rec = {"error": str(exc)}
+                    rec["baseline"] = {kind: values[i] for kind, values in baseline.items()}
                     clone._roadintel.append(rec)
                 cached = self.memo[key] = (f, clone)
                 while len(self.memo) > 32:
@@ -167,7 +207,7 @@ class MapView:
         return result
 
 
-def effective_specs(feats, specs):
+def effective_specs(feats, specs, layer="ground"):
     records = getattr(feats, "_roadintel", None)
     if records is None:
         return specs
@@ -177,12 +217,13 @@ def effective_specs(feats, specs):
         if spec is None or "error" in record:
             continue
         try:
-            section = normalize(record["tags"], spec, reverse=record["reverse"],
+            canonical = record.get("baseline", {}).get(layer) or spec
+            section = normalize(record["tags"], canonical, reverse=record["reverse"],
                                 left_hand=record["region"]["leftHand"], provenance=record["provenance"])
             import roads
             if spec.median and section.envelope_width > roads.dual_cap(spec.median, section.envelope_width) + .05:
                 raise ValueError("mapped section overlaps the adjacent carriageway; source geometry/width conflict")
-            for eid, native in record["region"].get("edges", {}).items():
+            for eid, native in native_edges(record).items():
                 if native["way"] != record.get("way"):
                     continue
                 forward = not eid.startswith("-")
@@ -204,7 +245,7 @@ def effective_specs(feats, specs):
                     eid, _ = endpoint(record, ll[end], True, ll[adjacent])
                 except (ValueError, KeyError):
                     return False
-                allowed = {c["dir"] for c in record["region"].get("connections", []) if c["from"] == eid}
+                allowed = {c["dir"] for c in native_connections(record["region"], [eid])}
                 return all(glyphs.get(m) in allowed for lane in turns for m in lane)
             section = replace(section, arrows_forward=arrow_ok(section.turns_forward, -1, -2),
                               arrows_backward=arrow_ok(section.turns_backward, 0, 1))
@@ -212,16 +253,19 @@ def effective_specs(feats, specs):
             try:
                 speed = float(raw_speed[:-3].strip()) * 1.609344 if raw_speed.endswith("mph") else float(raw_speed)
             except ValueError:
-                speed = spec.kmh
+                speed = None
+            speed = speed if speed is not None and math.isfinite(speed) and 5 <= speed <= 200 else None
+            section = replace(section, speed_kmh=speed)
             surface = record["tags"].get("surface")
             out[i] = spec._replace(width=section.envelope_width, lanes=section.forward + section.backward,
                                   oneway=section.direction != 0, dir=section.direction, intel=section,
-                                  kmh=speed if speed is not None and 5 <= speed <= 200 else spec.kmh,
+                                  urban=canonical.urban, walk=canonical.walk,
+                                  kmh=speed if speed is not None else spec.kmh,
                                   kind=roads.surface_kind(spec.cls, surface) if surface else spec.kind,
                                   surf=roads.surface_token(surface) if surface else spec.surf)
-        except ValueError as exc:
+        except (ValueError, OSError, KeyError, TypeError) as exc:
             # This clone belongs to this immutable profile; store diagnostics, not guesses.
-            record["layoutFallback"] = str(exc)
+            record.setdefault("layoutFallbacks", {})[layer] = str(exc)
     return out
 
 
@@ -239,7 +283,7 @@ def diagnostics(cells, specs_by_id):
             if spec.intel is not None:
                 sections[fid] = spec.intel.diagnostic()
             else:
-                fallbacks[fid] = record.get("error", record.get("layoutFallback", "unsupported section"))
+                fallbacks[fid] = record.get("error", record.get("layoutFallbacks", {}).get("ground", "unsupported section"))
     return {"backend": "sumo", "sections": sections, "fallbacks": fallbacks}
 
 
@@ -260,7 +304,8 @@ def bind_anchor(server, anchor, dataset):
     key = (dataset.identity, bool(server.left_hand(anchor)))
     view.mapdata = maps.get(key)
     if view.mapdata is None:
-        view.mapdata = maps[key] = MapView(server.mapdata, dataset, key[1])
+        urban = getattr(server.surface, "urban", None)
+        view.mapdata = maps[key] = MapView(server.mapdata, dataset, key[1], urban, server.road_widths)
     view.block_pools, view.road_pool, view.far_pool, view.far_bld_pool = [], None, None, None
     view.surface = copy.copy(server.surface) if server.surface is not None else None
     if view.surface is not None:

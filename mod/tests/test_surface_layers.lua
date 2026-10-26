@@ -42,10 +42,23 @@ T.check((S.calls.createObject_TerrainMaterial or 0) == before, 'clones made once
 -- a missing mask: the single dirt layer (the block must still import)
 local realExists = FS.fileExists
 FS.fileExists = function(_, p) return p ~= masks[3] end
+local imported = S.calls.importMaps
+local okStrict, whyStrict = terrain.load('/temp/beamngEarth/s1/hm_strict.png', 2, 4096, -256, -512, 1000,
+  { masks = masks, materials = MATS }, nil, nil, true)
+T.check(not okStrict and whyStrict:find('unusable') and S.calls.importMaps == imported,
+  'coordinated rebuild rejects a missing mask before importing')
 T.check(terrain.load('/temp/beamngEarth/s1/hm_1_256_0.png', 2, 4096, -256, -512, 1000, { masks = masks, materials = MATS }),
   'a missing mask still loads')
 T.check(#tb.lastImport.mats == 1 and tb.lastImport.mats[1] == 'beamngEarthDirt', '... with the single dirt layer')
 FS.fileExists = realExists
+local realImport, attempts = tb.importMaps, 0
+tb.importMaps = function() attempts = attempts + 1; error('simulated import failure') end
+local strictOk = terrain.load('/temp/beamngEarth/s1/hm_strict.png', 2, 4096, -256, -512, 1000,
+  { masks = masks, materials = MATS }, nil, nil, true)
+T.check(not strictOk and attempts == 1, 'strict import failure never retries without the surface materials')
+tb.importMaps = realImport
+T.check(not terrain.load('/temp/beamngEarth/s1/hm_strict.png', 2, 4096, -256, -512, 1000, nil, nil, nil, true),
+  'strict imports require surface layers')
 -- a material name taken by another kind of object (the weather's Precipitation was 'bngEarthSnow'):
 -- the single dirt layer, never a layer bound to nothing (the engine makes those asphalt)
 do

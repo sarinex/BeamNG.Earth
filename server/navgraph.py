@@ -45,6 +45,8 @@ def road_mph(feats, i, spec, mph=True, at=0.5):
     speed signs (furniture.py), so a sign shows what the traffic drives."""
     if spec is None or spec.cls not in DRIVE:
         return None
+    if spec.intel is not None and spec.intel.speed_kmh is not None:
+        return spec.intel.speed_kmh / 1.609344
     speed = feats.rules.get("max_speed_kmh")
     if speed is not None:
         for r in speed.rows(i):
@@ -168,6 +170,7 @@ def build(frame, feats_list, elev, centre, urban_fn=None, window=WINDOW_M, decks
     approaches = {}         # (connector, fid, end) -> (graph node next to it, traffic comes in)
     pending = {}            # name -> (x, y) of nodes whose z is still to sample
     node_fid = {}           # name -> the feature it was made on (its deck, if any)
+    node_deck_xy = {}       # unshifted spatial authority for an offset driving centre on a deck
     for feats in feats_list:
         if feats is None or len(feats) == 0:
             continue
@@ -262,6 +265,7 @@ def build(frame, feats_list, elev, centre, urban_fn=None, window=WINDOW_M, decks
                         full.append(sj)
             full.append(order[-1])
             xy = np.stack([np.interp(full, s, p[:, 0]), np.interp(full, s, p[:, 1])], 1)
+            deck_xy = xy
             if spec.intel is not None:
                 shift = (spec.intel.drive_left + spec.intel.drive_right) / 2
                 if abs(shift) > 1e-9:
@@ -299,10 +303,13 @@ def build(frame, feats_list, elev, centre, urban_fn=None, window=WINDOW_M, decks
                 if direction < 0:
                     a, b = b, a
                 pa, pb = xy[j] if direction >= 0 else xy[j + 1], xy[j + 1] if direction >= 0 else xy[j]
-                for nm, q in ((a, pa), (b, pb)):
+                for nm, q, index in ((a, pa, j if direction >= 0 else j + 1),
+                                     (b, pb, j + 1 if direction >= 0 else j)):
                     if nm not in nodes and nm not in pending:
                         pending[nm] = (float(q[0]), float(q[1]))
                         node_fid[nm] = fid
+                        if spec.intel is not None:
+                            node_deck_xy[nm] = deck_xy[index]
                 legal = road_mph(feats, i, spec, mph, at=(full[j] + full[j + 1]) / (2 * L)) * MPH
                 target = min(legal, float(profile[j]), float(profile[j + 1]))
                 edges.append([a, b, 1 if direction else 0, lo, li, round(target, 2), driv, round(w / 2, 2)])
@@ -335,7 +342,8 @@ def build(frame, feats_list, elev, centre, urban_fn=None, window=WINDOW_M, decks
         Z = np.asarray(elev(la, lo), np.float64).copy()
         if decks:
             for k, nm in enumerate(used):
-                dz = _deck_z(decks, node_fid.get(nm), X[k], Y[k])
+                dx, dy = node_deck_xy.get(nm, (X[k], Y[k]))
+                dz = _deck_z(decks, node_fid.get(nm), dx, dy)
                 if dz is not None:
                     Z[k] = dz
         radius = {}

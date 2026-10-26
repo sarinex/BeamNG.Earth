@@ -56,6 +56,12 @@ def network(path, kind="cross", restriction=True, left_hand=False):
     f = features([[coords[n] for n in ways[w]] for w in order], ["primary"] * len(order),
                  levels=[(j, 1) for j, w in enumerate(order) if kind == "bridge" and w in (20, 21)])
     f.attrs["src_record"] = np.array([f"w{w}@1" for w in order])
+    if kind == "ramp":
+        f.attrs["class"] = np.array(["motorway"] * len(order))
+        f.rules["oneway"] = rules([(i, 1) for i in range(len(order))], "float")
+        f.rules["subclass"] = rules([(order.index(30), "link")])
+    elif kind == "roundabout":
+        f.rules["oneway"] = rules([(order.index(30), 1)], "float")
     endpoints = {n for refs in ways.values() for n in (refs[0], refs[-1])}
     f.rules["connectors"] = rules([(i, str(ref), j / (len(ways[w]) - 1), j / (len(ways[w]) - 1))
                                    for i, w in enumerate(order) for j, ref in enumerate(ways[w]) if ref in endpoints])

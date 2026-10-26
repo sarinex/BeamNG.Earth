@@ -33,9 +33,9 @@ class Tracker(navgraph.Tracker):
 
 def endpoint(record, point, incoming, other=None):
     """Unique native edge at a junction, matched by way id AND endpoint geometry."""
-    from .runtime import project
+    from .runtime import project, native_edges
     candidates = []
-    for eid, edge in record["region"]["edges"].items():
+    for eid, edge in native_edges(record).items():
         if edge["way"] != record["way"] or len(edge["shape"]) < 2:
             continue
         q = edge["shape"][-1 if incoming else 0]
@@ -93,6 +93,8 @@ def apply(graph, frame, edge_records):
                 raise ValueError("incident arms disagree on SUMO junction or region revision")
             if len({(id(a[0]), a[1]) for a in arms}) != len(arms):
                 raise ValueError("duplicate approach mapping")
+            if len({(a[2], a[1]) for a in arms}) != len(arms):
+                raise ValueError("multiple Overture arms match one SUMO edge ambiguously")
             if junction in controlled:
                 for app in controlled[junction]["app"]:
                     if not any(a[1] and (a[0][1] if a[0][0] == junction else a[0][0]) == app[0] for a in arms):
@@ -114,7 +116,8 @@ def apply(graph, frame, edge_records):
             t = min(0.25, 5 / max(length, 1e-9))
             nodes[name] = [round(origin[k] + t * (other[k] - origin[k]), 3) for k in range(3)] + [e[7]]
             replacement[(id(e), junction, incoming)] = name
-        conns = arms[0][5]["connections"]
+        from .runtime import native_connections
+        conns = native_connections(arms[0][5], [a[2] for a in arms if a[1]])
         by_pair = {}
         for c in conns:
             by_pair.setdefault((c["from"], c["to"]), []).append(c)

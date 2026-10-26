@@ -62,7 +62,8 @@ def main():
                 hits.append((time.perf_counter() - start) * 1000)
                 assert hit
             dataset = Dataset(fixture / "cache")
-            enriched = MapView(FixtureMap(f), dataset, left_hand).cell(None, layers=("roads",)).layers["roads"]
+            urban = lambda la, lo: np.ones(np.shape(la), bool)
+            enriched = MapView(FixtureMap(f), dataset, left_hand, urban_fn=urban).cell(None, layers=("roads",)).layers["roads"]
             row = report["fixtures"][key] = {"preprocessingColdMs": cold, "preprocessingHit": summary(hits),
                                              "cacheBytes": path.stat().st_size, "combinations": {}}
             for intelligence, feat in (("legacy", f), ("sumo", enriched)):
@@ -75,7 +76,7 @@ def main():
                         measured = tile(feat, geometry, out, left_hand=left_hand)
                         timings.append(measured["totalMs"])
                         start = time.perf_counter()
-                        graph = navgraph.build(FRAME, [feat], flat, (120, 120), left_hand=left_hand)
+                        graph = navgraph.build(FRAME, [feat], flat, (120, 120), left_hand=left_hand, urban_fn=urban)
                         graphs.append((time.perf_counter() - start) * 1000)
                     row["combinations"][f"{geometry}+{intelligence}"] = dict(summary(timings),
                         graph=summary(graphs), triangles=measured["triangles"], meshBytes=measured["meshBytes"],

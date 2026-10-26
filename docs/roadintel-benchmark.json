@@ -1,6 +1,9 @@
 {
   "kind": "synthetic offline; in-game results NOT YET VALIDATED",
   "python": "3.12.13",
+  "sourceId": "b13814e6b151b871-68",
+  "geometryLibraries": "Shapely 2.2.0, Earcut 2.1.0",
+  "logicalCPUs": 32,
   "platform": "Windows-11-10.0.26300-SP0",
   "netconvert": "D:\\Coding Projects\\BeamNG.Earth\\.venv\\Lib\\site-packages\\sumo\\bin\\netconvert.exe",
   "repeats": 7,
@@ -11,19 +14,19 @@
   },
   "fixtures": {
     "T": {
-      "preprocessingColdMs": 412.261600002239,
+      "preprocessingColdMs": 421.9615000001795,
       "preprocessingHit": {
-        "p50Ms": 3.4751000021060463,
-        "p95Ms": 3.8589199997659307
+        "p50Ms": 3.3851000007416587,
+        "p95Ms": 4.3486899998242725
       },
-      "cacheBytes": 2371,
+      "cacheBytes": 2399,
       "combinations": {
         "legacy+legacy": {
-          "p50Ms": 20.40589999887743,
-          "p95Ms": 21.086570000625215,
+          "p50Ms": 20.38590000302065,
+          "p95Ms": 21.05579000162834,
           "graph": {
-            "p50Ms": 0.5104000010760501,
-            "p95Ms": 0.9931299973686688
+            "p50Ms": 0.735100002202671,
+            "p95Ms": 1.1485899998660896
           },
           "triangles": 1224,
           "meshBytes": 180441,
@@ -38,11 +41,11 @@
           "diagnostics": null
         },
         "geos+legacy": {
-          "p50Ms": 77.42599999983213,
-          "p95Ms": 78.50065999882645,
+          "p50Ms": 76.68380000177422,
+          "p95Ms": 77.69884999979695,
           "graph": {
-            "p50Ms": 0.516200001584366,
-            "p95Ms": 0.650290000339737
+            "p50Ms": 0.6828000005043577,
+            "p95Ms": 0.7504300006985432
           },
           "triangles": 1257,
           "meshBytes": 189916,
@@ -60,10 +63,10 @@
             "earcutTriangles": 33,
             "geosCorners": 2,
             "backend": "geos",
-            "footprintMs": 1.441,
+            "footprintMs": 1.453,
             "inputVertices": 2627,
             "compactedVertices": 1299,
-            "meshMs": 5.737,
+            "meshMs": 5.61,
             "vertices": 1299,
             "triangles": 1257,
             "version": "2",
@@ -71,11 +74,11 @@
           }
         },
         "legacy+sumo": {
-          "p50Ms": 24.32060000137426,
-          "p95Ms": 24.87429000066186,
+          "p50Ms": 23.188800001662457,
+          "p95Ms": 24.033139999664854,
           "graph": {
-            "p50Ms": 1.0211000007984694,
-            "p95Ms": 1.2189500004751608
+            "p50Ms": 1.3058999975328334,
+            "p95Ms": 1.4653599981102159
           },
           "triangles": 2118,
           "meshBytes": 234988,
@@ -131,7 +134,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -170,7 +174,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -209,17 +214,18 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": null
         },
         "geos+sumo": {
-          "p50Ms": 81.75499999924796,
-          "p95Ms": 83.3771199992043,
+          "p50Ms": 80.0889999991341,
+          "p95Ms": 81.32380999886664,
           "graph": {
-            "p50Ms": 1.0273999978380743,
-            "p95Ms": 1.088670000899583
+            "p50Ms": 1.1994000014965422,
+            "p95Ms": 1.5328299996326675
           },
           "triangles": 2151,
           "meshBytes": 244463,
@@ -275,7 +281,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -314,7 +321,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -353,7 +361,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": {
@@ -397,7 +406,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id001": {
                   "forward": 2,
@@ -436,7 +446,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id002": {
                   "forward": 2,
@@ -475,7 +486,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 }
               },
               "fallbacks": {}
@@ -485,10 +497,10 @@
             "earcutTriangles": 33,
             "geosCorners": 2,
             "backend": "geos",
-            "footprintMs": 1.4,
+            "footprintMs": 1.396,
             "inputVertices": 4451,
             "compactedVertices": 2211,
-            "meshMs": 8.269,
+            "meshMs": 8.46,
             "vertices": 2211,
             "triangles": 2151,
             "version": "2",
@@ -497,26 +509,26 @@
         }
       },
       "regionCache": {
-        "hits": 2,
+        "hits": 460,
         "misses": 1,
         "matched": 0,
         "fallbacks": 0
       }
     },
     "cross": {
-      "preprocessingColdMs": 352.29119999712566,
+      "preprocessingColdMs": 374.6900999976788,
       "preprocessingHit": {
-        "p50Ms": 3.4666999999899417,
-        "p95Ms": 3.6277100000006612
+        "p50Ms": 3.1187000022327993,
+        "p95Ms": 3.7226699987513707
       },
-      "cacheBytes": 3384,
+      "cacheBytes": 3412,
       "combinations": {
         "legacy+legacy": {
-          "p50Ms": 32.247899998765206,
-          "p95Ms": 33.31642999837641,
+          "p50Ms": 31.529500000033295,
+          "p95Ms": 31.708820000494597,
           "graph": {
-            "p50Ms": 0.6331000004138332,
-            "p95Ms": 0.6961900020542089
+            "p50Ms": 0.8624999973108061,
+            "p95Ms": 0.9800600015296368
           },
           "triangles": 1656,
           "meshBytes": 317625,
@@ -532,11 +544,11 @@
           "diagnostics": null
         },
         "geos+legacy": {
-          "p50Ms": 144.83520000067074,
-          "p95Ms": 146.79894000109925,
+          "p50Ms": 143.93550000022515,
+          "p95Ms": 147.28195000170672,
           "graph": {
-            "p50Ms": 0.6044999972800724,
-            "p95Ms": 0.6167300023662392
+            "p50Ms": 0.887399997736793,
+            "p95Ms": 1.3059799995971841
           },
           "triangles": 1718,
           "meshBytes": 333472,
@@ -555,10 +567,10 @@
             "earcutTriangles": 62,
             "geosCorners": 4,
             "backend": "geos",
-            "footprintMs": 2.274,
+            "footprintMs": 2.206,
             "inputVertices": 3626,
             "compactedVertices": 1784,
-            "meshMs": 8.91,
+            "meshMs": 8.631,
             "vertices": 1784,
             "triangles": 1718,
             "version": "2",
@@ -566,11 +578,11 @@
           }
         },
         "legacy+sumo": {
-          "p50Ms": 36.52639999927487,
-          "p95Ms": 46.30642000229272,
+          "p50Ms": 36.75140000268584,
+          "p95Ms": 38.35398000119312,
           "graph": {
-            "p50Ms": 1.3347999993129633,
-            "p95Ms": 1.4524599977448815
+            "p50Ms": 1.639399997657165,
+            "p95Ms": 1.994200001718127
           },
           "triangles": 2800,
           "meshBytes": 387460,
@@ -627,7 +639,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -666,7 +679,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -705,7 +719,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -744,17 +759,18 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": null
         },
         "geos+sumo": {
-          "p50Ms": 147.71639999889885,
-          "p95Ms": 148.86671000203933,
+          "p50Ms": 149.0754000005836,
+          "p95Ms": 151.0906100003922,
           "graph": {
-            "p50Ms": 1.273000001674518,
-            "p95Ms": 1.4051300007849932
+            "p50Ms": 1.6672999990987591,
+            "p95Ms": 1.888459998735925
           },
           "triangles": 2862,
           "meshBytes": 403307,
@@ -811,7 +827,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -850,7 +867,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -889,7 +907,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -928,7 +947,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": {
@@ -972,7 +992,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id001": {
                   "forward": 2,
@@ -1011,7 +1032,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id002": {
                   "forward": 2,
@@ -1050,7 +1072,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id003": {
                   "forward": 2,
@@ -1089,7 +1112,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 }
               },
               "fallbacks": {}
@@ -1099,10 +1123,10 @@
             "earcutTriangles": 62,
             "geosCorners": 4,
             "backend": "geos",
-            "footprintMs": 2.351,
+            "footprintMs": 2.169,
             "inputVertices": 5962,
             "compactedVertices": 2952,
-            "meshMs": 12.311,
+            "meshMs": 12.83,
             "vertices": 2952,
             "triangles": 2862,
             "version": "2",
@@ -1111,26 +1135,26 @@
         }
       },
       "regionCache": {
-        "hits": 3,
+        "hits": 609,
         "misses": 1,
         "matched": 0,
         "fallbacks": 0
       }
     },
     "offset": {
-      "preprocessingColdMs": 346.3053999985277,
+      "preprocessingColdMs": 480.5372000009811,
       "preprocessingHit": {
-        "p50Ms": 3.2921000019996427,
-        "p95Ms": 3.510610000375891
+        "p50Ms": 3.2637000003887806,
+        "p95Ms": 3.8860099990415615
       },
-      "cacheBytes": 4298,
+      "cacheBytes": 4326,
       "combinations": {
         "legacy+legacy": {
-          "p50Ms": 30.239799998525996,
-          "p95Ms": 31.116919999476522,
+          "p50Ms": 30.59439999924507,
+          "p95Ms": 30.997520001619705,
           "graph": {
-            "p50Ms": 0.6885000002512243,
-            "p95Ms": 0.8513899996614781
+            "p50Ms": 1.01619999986724,
+            "p95Ms": 1.099650000105612
           },
           "triangles": 1648,
           "meshBytes": 270093,
@@ -1147,11 +1171,11 @@
           "diagnostics": null
         },
         "geos+legacy": {
-          "p50Ms": 118.05989999993471,
-          "p95Ms": 120.96768999908818,
+          "p50Ms": 119.99189999914961,
+          "p95Ms": 121.30559000033827,
           "graph": {
-            "p50Ms": 0.6863999988127034,
-            "p95Ms": 0.7961099992826347
+            "p50Ms": 1.0029000004578847,
+            "p95Ms": 1.1165700016135816
           },
           "triangles": 1701,
           "meshBytes": 284296,
@@ -1171,10 +1195,10 @@
             "earcutTriangles": 53,
             "geosCorners": 4,
             "backend": "geos",
-            "footprintMs": 2.484,
+            "footprintMs": 2.182,
             "inputVertices": 3567,
             "compactedVertices": 1758,
-            "meshMs": 9.18,
+            "meshMs": 8.576,
             "vertices": 1758,
             "triangles": 1701,
             "version": "2",
@@ -1182,11 +1206,11 @@
           }
         },
         "legacy+sumo": {
-          "p50Ms": 34.611899998708395,
-          "p95Ms": 38.588039999012835,
+          "p50Ms": 33.93879999930505,
+          "p95Ms": 34.780440000395174,
           "graph": {
-            "p50Ms": 1.668299999437295,
-            "p95Ms": 1.8098199987434782
+            "p50Ms": 2.1110000016051345,
+            "p95Ms": 2.53421000088565
           },
           "triangles": 2836,
           "meshBytes": 339460,
@@ -1244,7 +1268,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -1283,7 +1308,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -1322,7 +1348,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -1361,7 +1388,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -1400,17 +1428,18 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": null
         },
         "geos+sumo": {
-          "p50Ms": 118.045200000779,
-          "p95Ms": 135.9196299996256,
+          "p50Ms": 119.39469999924768,
+          "p95Ms": 123.05585999965842,
           "graph": {
-            "p50Ms": 1.62330000239308,
-            "p95Ms": 1.8897999987530054
+            "p50Ms": 2.1542000031331554,
+            "p95Ms": 2.7323299993440737
           },
           "triangles": 2887,
           "meshBytes": 352223,
@@ -1468,7 +1497,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -1507,7 +1537,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -1546,7 +1577,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -1585,7 +1617,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -1624,7 +1657,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": {
@@ -1668,7 +1702,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id001": {
                   "forward": 2,
@@ -1707,7 +1742,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id002": {
                   "forward": 2,
@@ -1746,7 +1782,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id003": {
                   "forward": 2,
@@ -1785,7 +1822,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id004": {
                   "forward": 2,
@@ -1824,7 +1862,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 }
               },
               "fallbacks": {}
@@ -1834,10 +1873,10 @@
             "earcutTriangles": 51,
             "geosCorners": 4,
             "backend": "geos",
-            "footprintMs": 2.092,
+            "footprintMs": 2.282,
             "inputVertices": 5985,
             "compactedVertices": 2969,
-            "meshMs": 11.848,
+            "meshMs": 12.422,
             "vertices": 2969,
             "triangles": 2887,
             "version": "2",
@@ -1846,26 +1885,26 @@
         }
       },
       "regionCache": {
-        "hits": 4,
+        "hits": 884,
         "misses": 1,
         "matched": 0,
         "fallbacks": 0
       }
     },
     "multiway": {
-      "preprocessingColdMs": 343.6196000002383,
+      "preprocessingColdMs": 380.07180000204244,
       "preprocessingHit": {
-        "p50Ms": 3.1800999968254473,
-        "p95Ms": 3.4711400003288873
+        "p50Ms": 3.3118999999715015,
+        "p95Ms": 3.6782000013772627
       },
-      "cacheBytes": 6358,
+      "cacheBytes": 6386,
       "combinations": {
         "legacy+legacy": {
-          "p50Ms": 45.55930000060471,
-          "p95Ms": 46.55226999930164,
+          "p50Ms": 46.053300000494346,
+          "p95Ms": 46.27300999927684,
           "graph": {
-            "p50Ms": 0.8144000021275133,
-            "p95Ms": 0.9444299990718719
+            "p50Ms": 3.4516000014264137,
+            "p95Ms": 3.5728299990296364
           },
           "triangles": 2558,
           "meshBytes": 491267,
@@ -1883,11 +1922,11 @@
           "diagnostics": null
         },
         "geos+legacy": {
-          "p50Ms": 217.70330000072136,
-          "p95Ms": 221.6965599989635,
+          "p50Ms": 218.79029999763588,
+          "p95Ms": 220.55101000150898,
           "graph": {
-            "p50Ms": 0.8761999997659586,
-            "p95Ms": 1.0527199989155633
+            "p50Ms": 3.5338999987288844,
+            "p95Ms": 4.178419999880133
           },
           "triangles": 2648,
           "meshBytes": 515562,
@@ -1908,10 +1947,10 @@
             "earcutTriangles": 90,
             "geosCorners": 6,
             "backend": "geos",
-            "footprintMs": 3.569,
+            "footprintMs": 3.344,
             "inputVertices": 5586,
             "compactedVertices": 2750,
-            "meshMs": 12.647,
+            "meshMs": 12.359,
             "vertices": 2750,
             "triangles": 2648,
             "version": "2",
@@ -1919,11 +1958,11 @@
           }
         },
         "legacy+sumo": {
-          "p50Ms": 53.812599999218946,
-          "p95Ms": 55.91834999868297,
+          "p50Ms": 53.59820000012405,
+          "p95Ms": 54.18450000106532,
           "graph": {
-            "p50Ms": 1.7987999999604654,
-            "p95Ms": 1.9753400003537536
+            "p50Ms": 5.320799999026349,
+            "p95Ms": 5.577359999006148
           },
           "triangles": 4268,
           "meshBytes": 595448,
@@ -1982,7 +2021,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -2021,7 +2061,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -2060,7 +2101,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -2099,7 +2141,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -2138,7 +2181,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -2177,17 +2221,18 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": null
         },
         "geos+sumo": {
-          "p50Ms": 222.29850000076112,
-          "p95Ms": 226.2000300004729,
+          "p50Ms": 225.1938000008522,
+          "p95Ms": 227.32025999830512,
           "graph": {
-            "p50Ms": 1.8990999997186009,
-            "p95Ms": 2.1261099998810096
+            "p50Ms": 5.149000000528758,
+            "p95Ms": 5.458980000184965
           },
           "triangles": 4358,
           "meshBytes": 619743,
@@ -2246,7 +2291,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -2285,7 +2331,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -2324,7 +2371,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -2363,7 +2411,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -2402,7 +2451,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -2441,7 +2491,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": {
@@ -2485,7 +2536,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id001": {
                   "forward": 2,
@@ -2524,7 +2576,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id002": {
                   "forward": 2,
@@ -2563,7 +2616,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id003": {
                   "forward": 2,
@@ -2602,7 +2656,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id004": {
                   "forward": 2,
@@ -2641,7 +2696,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id005": {
                   "forward": 2,
@@ -2680,7 +2736,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 }
               },
               "fallbacks": {}
@@ -2690,10 +2747,10 @@
             "earcutTriangles": 90,
             "geosCorners": 6,
             "backend": "geos",
-            "footprintMs": 3.328,
+            "footprintMs": 3.398,
             "inputVertices": 9070,
             "compactedVertices": 4492,
-            "meshMs": 16.477,
+            "meshMs": 17.394,
             "vertices": 4492,
             "triangles": 4358,
             "version": "2",
@@ -2702,31 +2759,31 @@
         }
       },
       "regionCache": {
-        "hits": 5,
+        "hits": 907,
         "misses": 1,
         "matched": 0,
         "fallbacks": 0
       }
     },
     "ramp": {
-      "preprocessingColdMs": 341.8220999992627,
+      "preprocessingColdMs": 401.7192999999679,
       "preprocessingHit": {
-        "p50Ms": 3.1076000013854355,
-        "p95Ms": 3.386049999608076
+        "p50Ms": 3.4960000011778902,
+        "p95Ms": 4.102199999033473
       },
-      "cacheBytes": 2782,
+      "cacheBytes": 2810,
       "combinations": {
         "legacy+legacy": {
-          "p50Ms": 37.810899997566594,
-          "p95Ms": 38.197509999008616,
+          "p50Ms": 9.23770000008517,
+          "p95Ms": 11.598720001347827,
           "graph": {
-            "p50Ms": 0.735100002202671,
-            "p95Ms": 0.8276700009446358
+            "p50Ms": 0.846099999762373,
+            "p95Ms": 0.9887700009130639
           },
-          "triangles": 2068,
-          "meshBytes": 406569,
-          "graphNodes": 12,
-          "graphEdges": 11,
+          "triangles": 1890,
+          "meshBytes": 115795,
+          "graphNodes": 14,
+          "graphEdges": 13,
           "intelligence": null,
           "sections": [
             null,
@@ -2738,16 +2795,16 @@
           "diagnostics": null
         },
         "geos+legacy": {
-          "p50Ms": 181.62090000259923,
-          "p95Ms": 185.88355000138108,
+          "p50Ms": 12.330199999269098,
+          "p95Ms": 12.812040000062552,
           "graph": {
-            "p50Ms": 0.7250999988173135,
-            "p95Ms": 0.7462899990059668
+            "p50Ms": 0.7372000000032131,
+            "p95Ms": 1.193410000269068
           },
-          "triangles": 2148,
-          "meshBytes": 428238,
-          "graphNodes": 12,
-          "graphEdges": 11,
+          "triangles": 1903,
+          "meshBytes": 116702,
+          "graphNodes": 14,
+          "graphEdges": 13,
           "intelligence": null,
           "sections": [
             null,
@@ -2759,30 +2816,30 @@
           "diagnostics": {
             "polygons": 1,
             "holes": 0,
-            "earcutTriangles": 80,
-            "geosCorners": 5,
+            "earcutTriangles": 13,
+            "geosCorners": 0,
             "backend": "geos",
-            "footprintMs": 2.887,
-            "inputVertices": 4536,
-            "compactedVertices": 2230,
-            "meshMs": 9.635,
-            "vertices": 2230,
-            "triangles": 2148,
+            "footprintMs": 1.195,
+            "inputVertices": 3891,
+            "compactedVertices": 1941,
+            "meshMs": 7.228,
+            "vertices": 1941,
+            "triangles": 1903,
             "version": "2",
-            "meshBytes": 428238
+            "meshBytes": 116702
           }
         },
         "legacy+sumo": {
-          "p50Ms": 39.6312000011676,
-          "p95Ms": 41.50664000044344,
+          "p50Ms": 8.239000002504326,
+          "p95Ms": 8.647109999947133,
           "graph": {
-            "p50Ms": 1.1090000007243361,
-            "p95Ms": 1.3414799996098734
+            "p50Ms": 1.1228000003029592,
+            "p95Ms": 1.449870001670206
           },
-          "triangles": 2480,
-          "meshBytes": 429518,
-          "graphNodes": 21,
-          "graphEdges": 22,
+          "triangles": 1484,
+          "meshBytes": 91051,
+          "graphNodes": 20,
+          "graphEdges": 21,
           "intelligence": {
             "sumoJunctions": [
               "c2"
@@ -2803,23 +2860,23 @@
               "backward": 0,
               "direction": 1,
               "lane_widths": [
-                3.3,
-                3.3
+                3.6,
+                3.6
               ],
               "lane_offsets": [
-                1.65,
-                -1.65
+                1.8,
+                -1.8
               ],
               "divider_offsets": [
                 0.0
               ],
               "centre": null,
-              "drive_left": 3.3,
-              "drive_right": -3.3,
+              "drive_left": 3.6,
+              "drive_right": -3.6,
               "parking_left": 0.0,
               "parking_right": 0.0,
-              "shoulder_left": 0.0,
-              "shoulder_right": 0.0,
+              "shoulder_left": 1.9,
+              "shoulder_right": 1.9,
               "turns_forward": [],
               "turns_backward": [],
               "confidence": "mapped-counts/estimated-widths",
@@ -2827,36 +2884,38 @@
               "notes": [
                 "left parking mapping unavailable; no dedicated parking modeled",
                 "right parking mapping unavailable; no dedicated parking modeled",
-                "class lane width estimated"
+                "class lane width estimated",
+                "unmapped non-driving margins retained from canonical Legacy pavement envelope"
               ],
               "mapped_width": null,
-              "envelope_width": 6.6,
+              "envelope_width": 11.0,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
               "backward": 0,
               "direction": 1,
               "lane_widths": [
-                3.3,
-                3.3
+                3.6,
+                3.6
               ],
               "lane_offsets": [
-                1.65,
-                -1.65
+                1.8,
+                -1.8
               ],
               "divider_offsets": [
                 0.0
               ],
               "centre": null,
-              "drive_left": 3.3,
-              "drive_right": -3.3,
+              "drive_left": 3.6,
+              "drive_right": -3.6,
               "parking_left": 0.0,
               "parking_right": 0.0,
-              "shoulder_left": 0.0,
-              "shoulder_right": 0.0,
+              "shoulder_left": 1.9,
+              "shoulder_right": 1.9,
               "turns_forward": [],
               "turns_backward": [],
               "confidence": "mapped-counts/estimated-widths",
@@ -2864,36 +2923,38 @@
               "notes": [
                 "left parking mapping unavailable; no dedicated parking modeled",
                 "right parking mapping unavailable; no dedicated parking modeled",
-                "class lane width estimated"
+                "class lane width estimated",
+                "unmapped non-driving margins retained from canonical Legacy pavement envelope"
               ],
               "mapped_width": null,
-              "envelope_width": 6.6,
+              "envelope_width": 11.0,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
               "backward": 0,
               "direction": 1,
               "lane_widths": [
-                3.3,
-                3.3
+                3.6,
+                3.6
               ],
               "lane_offsets": [
-                1.65,
-                -1.65
+                1.8,
+                -1.8
               ],
               "divider_offsets": [
                 0.0
               ],
               "centre": null,
-              "drive_left": 3.3,
-              "drive_right": -3.3,
+              "drive_left": 3.6,
+              "drive_right": -3.6,
               "parking_left": 0.0,
               "parking_right": 0.0,
-              "shoulder_left": 0.0,
-              "shoulder_right": 0.0,
+              "shoulder_left": 1.9,
+              "shoulder_right": 1.9,
               "turns_forward": [],
               "turns_backward": [],
               "confidence": "mapped-counts/estimated-widths",
@@ -2901,36 +2962,38 @@
               "notes": [
                 "left parking mapping unavailable; no dedicated parking modeled",
                 "right parking mapping unavailable; no dedicated parking modeled",
-                "class lane width estimated"
+                "class lane width estimated",
+                "unmapped non-driving margins retained from canonical Legacy pavement envelope"
               ],
               "mapped_width": null,
-              "envelope_width": 6.6,
+              "envelope_width": 11.0,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
               "backward": 0,
               "direction": 1,
               "lane_widths": [
-                3.3,
-                3.3
+                3.6,
+                3.6
               ],
               "lane_offsets": [
-                1.65,
-                -1.65
+                1.8,
+                -1.8
               ],
               "divider_offsets": [
                 0.0
               ],
               "centre": null,
-              "drive_left": 3.3,
-              "drive_right": -3.3,
+              "drive_left": 3.6,
+              "drive_right": -3.6,
               "parking_left": 0.0,
               "parking_right": 0.0,
-              "shoulder_left": 0.0,
-              "shoulder_right": 0.0,
+              "shoulder_left": 1.9,
+              "shoulder_right": 1.9,
               "turns_forward": [],
               "turns_backward": [],
               "confidence": "mapped-counts/estimated-widths",
@@ -2938,32 +3001,34 @@
               "notes": [
                 "left parking mapping unavailable; no dedicated parking modeled",
                 "right parking mapping unavailable; no dedicated parking modeled",
-                "class lane width estimated"
+                "class lane width estimated",
+                "unmapped non-driving margins retained from canonical Legacy pavement envelope"
               ],
               "mapped_width": null,
-              "envelope_width": 6.6,
+              "envelope_width": 11.0,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 1,
               "backward": 0,
               "direction": 1,
               "lane_widths": [
-                3.3
+                3.6
               ],
               "lane_offsets": [
                 0.0
               ],
               "divider_offsets": [],
               "centre": null,
-              "drive_left": 1.65,
-              "drive_right": -1.65,
+              "drive_left": 1.8,
+              "drive_right": -1.8,
               "parking_left": 0.0,
               "parking_right": 0.0,
-              "shoulder_left": 0.0,
-              "shoulder_right": 0.0,
+              "shoulder_left": 1.2,
+              "shoulder_right": 1.2,
               "turns_forward": [],
               "turns_backward": [],
               "confidence": "mapped-counts/estimated-widths",
@@ -2971,28 +3036,30 @@
               "notes": [
                 "left parking mapping unavailable; no dedicated parking modeled",
                 "right parking mapping unavailable; no dedicated parking modeled",
-                "class lane width estimated"
+                "class lane width estimated",
+                "unmapped non-driving margins retained from canonical Legacy pavement envelope"
               ],
               "mapped_width": null,
-              "envelope_width": 3.3,
+              "envelope_width": 6.0,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": null
         },
         "geos+sumo": {
-          "p50Ms": 181.7869000005885,
-          "p95Ms": 185.5186800006777,
+          "p50Ms": 11.753300001146272,
+          "p95Ms": 12.063590001343982,
           "graph": {
-            "p50Ms": 1.05729999995674,
-            "p95Ms": 1.1605599982431158
+            "p50Ms": 1.1432999999669846,
+            "p95Ms": 1.2666300001001218
           },
-          "triangles": 2560,
-          "meshBytes": 451187,
-          "graphNodes": 21,
-          "graphEdges": 22,
+          "triangles": 1497,
+          "meshBytes": 91958,
+          "graphNodes": 20,
+          "graphEdges": 21,
           "intelligence": {
             "sumoJunctions": [
               "c2"
@@ -3013,23 +3080,23 @@
               "backward": 0,
               "direction": 1,
               "lane_widths": [
-                3.3,
-                3.3
+                3.6,
+                3.6
               ],
               "lane_offsets": [
-                1.65,
-                -1.65
+                1.8,
+                -1.8
               ],
               "divider_offsets": [
                 0.0
               ],
               "centre": null,
-              "drive_left": 3.3,
-              "drive_right": -3.3,
+              "drive_left": 3.6,
+              "drive_right": -3.6,
               "parking_left": 0.0,
               "parking_right": 0.0,
-              "shoulder_left": 0.0,
-              "shoulder_right": 0.0,
+              "shoulder_left": 1.9,
+              "shoulder_right": 1.9,
               "turns_forward": [],
               "turns_backward": [],
               "confidence": "mapped-counts/estimated-widths",
@@ -3037,36 +3104,38 @@
               "notes": [
                 "left parking mapping unavailable; no dedicated parking modeled",
                 "right parking mapping unavailable; no dedicated parking modeled",
-                "class lane width estimated"
+                "class lane width estimated",
+                "unmapped non-driving margins retained from canonical Legacy pavement envelope"
               ],
               "mapped_width": null,
-              "envelope_width": 6.6,
+              "envelope_width": 11.0,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
               "backward": 0,
               "direction": 1,
               "lane_widths": [
-                3.3,
-                3.3
+                3.6,
+                3.6
               ],
               "lane_offsets": [
-                1.65,
-                -1.65
+                1.8,
+                -1.8
               ],
               "divider_offsets": [
                 0.0
               ],
               "centre": null,
-              "drive_left": 3.3,
-              "drive_right": -3.3,
+              "drive_left": 3.6,
+              "drive_right": -3.6,
               "parking_left": 0.0,
               "parking_right": 0.0,
-              "shoulder_left": 0.0,
-              "shoulder_right": 0.0,
+              "shoulder_left": 1.9,
+              "shoulder_right": 1.9,
               "turns_forward": [],
               "turns_backward": [],
               "confidence": "mapped-counts/estimated-widths",
@@ -3074,36 +3143,38 @@
               "notes": [
                 "left parking mapping unavailable; no dedicated parking modeled",
                 "right parking mapping unavailable; no dedicated parking modeled",
-                "class lane width estimated"
+                "class lane width estimated",
+                "unmapped non-driving margins retained from canonical Legacy pavement envelope"
               ],
               "mapped_width": null,
-              "envelope_width": 6.6,
+              "envelope_width": 11.0,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
               "backward": 0,
               "direction": 1,
               "lane_widths": [
-                3.3,
-                3.3
+                3.6,
+                3.6
               ],
               "lane_offsets": [
-                1.65,
-                -1.65
+                1.8,
+                -1.8
               ],
               "divider_offsets": [
                 0.0
               ],
               "centre": null,
-              "drive_left": 3.3,
-              "drive_right": -3.3,
+              "drive_left": 3.6,
+              "drive_right": -3.6,
               "parking_left": 0.0,
               "parking_right": 0.0,
-              "shoulder_left": 0.0,
-              "shoulder_right": 0.0,
+              "shoulder_left": 1.9,
+              "shoulder_right": 1.9,
               "turns_forward": [],
               "turns_backward": [],
               "confidence": "mapped-counts/estimated-widths",
@@ -3111,36 +3182,38 @@
               "notes": [
                 "left parking mapping unavailable; no dedicated parking modeled",
                 "right parking mapping unavailable; no dedicated parking modeled",
-                "class lane width estimated"
+                "class lane width estimated",
+                "unmapped non-driving margins retained from canonical Legacy pavement envelope"
               ],
               "mapped_width": null,
-              "envelope_width": 6.6,
+              "envelope_width": 11.0,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
               "backward": 0,
               "direction": 1,
               "lane_widths": [
-                3.3,
-                3.3
+                3.6,
+                3.6
               ],
               "lane_offsets": [
-                1.65,
-                -1.65
+                1.8,
+                -1.8
               ],
               "divider_offsets": [
                 0.0
               ],
               "centre": null,
-              "drive_left": 3.3,
-              "drive_right": -3.3,
+              "drive_left": 3.6,
+              "drive_right": -3.6,
               "parking_left": 0.0,
               "parking_right": 0.0,
-              "shoulder_left": 0.0,
-              "shoulder_right": 0.0,
+              "shoulder_left": 1.9,
+              "shoulder_right": 1.9,
               "turns_forward": [],
               "turns_backward": [],
               "confidence": "mapped-counts/estimated-widths",
@@ -3148,32 +3221,34 @@
               "notes": [
                 "left parking mapping unavailable; no dedicated parking modeled",
                 "right parking mapping unavailable; no dedicated parking modeled",
-                "class lane width estimated"
+                "class lane width estimated",
+                "unmapped non-driving margins retained from canonical Legacy pavement envelope"
               ],
               "mapped_width": null,
-              "envelope_width": 6.6,
+              "envelope_width": 11.0,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 1,
               "backward": 0,
               "direction": 1,
               "lane_widths": [
-                3.3
+                3.6
               ],
               "lane_offsets": [
                 0.0
               ],
               "divider_offsets": [],
               "centre": null,
-              "drive_left": 1.65,
-              "drive_right": -1.65,
+              "drive_left": 1.8,
+              "drive_right": -1.8,
               "parking_left": 0.0,
               "parking_right": 0.0,
-              "shoulder_left": 0.0,
-              "shoulder_right": 0.0,
+              "shoulder_left": 1.2,
+              "shoulder_right": 1.2,
               "turns_forward": [],
               "turns_backward": [],
               "confidence": "mapped-counts/estimated-widths",
@@ -3181,13 +3256,15 @@
               "notes": [
                 "left parking mapping unavailable; no dedicated parking modeled",
                 "right parking mapping unavailable; no dedicated parking modeled",
-                "class lane width estimated"
+                "class lane width estimated",
+                "unmapped non-driving margins retained from canonical Legacy pavement envelope"
               ],
               "mapped_width": null,
-              "envelope_width": 3.3,
+              "envelope_width": 6.0,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": {
@@ -3199,23 +3276,23 @@
                   "backward": 0,
                   "direction": 1,
                   "lane_widths": [
-                    3.3,
-                    3.3
+                    3.6,
+                    3.6
                   ],
                   "lane_offsets": [
-                    1.65,
-                    -1.65
+                    1.8,
+                    -1.8
                   ],
                   "divider_offsets": [
                     0.0
                   ],
                   "centre": null,
-                  "drive_left": 3.3,
-                  "drive_right": -3.3,
+                  "drive_left": 3.6,
+                  "drive_right": -3.6,
                   "parking_left": 0.0,
                   "parking_right": 0.0,
-                  "shoulder_left": 0.0,
-                  "shoulder_right": 0.0,
+                  "shoulder_left": 1.9,
+                  "shoulder_right": 1.9,
                   "turns_forward": [],
                   "turns_backward": [],
                   "confidence": "mapped-counts/estimated-widths",
@@ -3223,36 +3300,38 @@
                   "notes": [
                     "left parking mapping unavailable; no dedicated parking modeled",
                     "right parking mapping unavailable; no dedicated parking modeled",
-                    "class lane width estimated"
+                    "class lane width estimated",
+                    "unmapped non-driving margins retained from canonical Legacy pavement envelope"
                   ],
                   "mapped_width": null,
-                  "envelope_width": 6.6,
+                  "envelope_width": 11.0,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id001": {
                   "forward": 2,
                   "backward": 0,
                   "direction": 1,
                   "lane_widths": [
-                    3.3,
-                    3.3
+                    3.6,
+                    3.6
                   ],
                   "lane_offsets": [
-                    1.65,
-                    -1.65
+                    1.8,
+                    -1.8
                   ],
                   "divider_offsets": [
                     0.0
                   ],
                   "centre": null,
-                  "drive_left": 3.3,
-                  "drive_right": -3.3,
+                  "drive_left": 3.6,
+                  "drive_right": -3.6,
                   "parking_left": 0.0,
                   "parking_right": 0.0,
-                  "shoulder_left": 0.0,
-                  "shoulder_right": 0.0,
+                  "shoulder_left": 1.9,
+                  "shoulder_right": 1.9,
                   "turns_forward": [],
                   "turns_backward": [],
                   "confidence": "mapped-counts/estimated-widths",
@@ -3260,36 +3339,38 @@
                   "notes": [
                     "left parking mapping unavailable; no dedicated parking modeled",
                     "right parking mapping unavailable; no dedicated parking modeled",
-                    "class lane width estimated"
+                    "class lane width estimated",
+                    "unmapped non-driving margins retained from canonical Legacy pavement envelope"
                   ],
                   "mapped_width": null,
-                  "envelope_width": 6.6,
+                  "envelope_width": 11.0,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id002": {
                   "forward": 2,
                   "backward": 0,
                   "direction": 1,
                   "lane_widths": [
-                    3.3,
-                    3.3
+                    3.6,
+                    3.6
                   ],
                   "lane_offsets": [
-                    1.65,
-                    -1.65
+                    1.8,
+                    -1.8
                   ],
                   "divider_offsets": [
                     0.0
                   ],
                   "centre": null,
-                  "drive_left": 3.3,
-                  "drive_right": -3.3,
+                  "drive_left": 3.6,
+                  "drive_right": -3.6,
                   "parking_left": 0.0,
                   "parking_right": 0.0,
-                  "shoulder_left": 0.0,
-                  "shoulder_right": 0.0,
+                  "shoulder_left": 1.9,
+                  "shoulder_right": 1.9,
                   "turns_forward": [],
                   "turns_backward": [],
                   "confidence": "mapped-counts/estimated-widths",
@@ -3297,36 +3378,38 @@
                   "notes": [
                     "left parking mapping unavailable; no dedicated parking modeled",
                     "right parking mapping unavailable; no dedicated parking modeled",
-                    "class lane width estimated"
+                    "class lane width estimated",
+                    "unmapped non-driving margins retained from canonical Legacy pavement envelope"
                   ],
                   "mapped_width": null,
-                  "envelope_width": 6.6,
+                  "envelope_width": 11.0,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id003": {
                   "forward": 2,
                   "backward": 0,
                   "direction": 1,
                   "lane_widths": [
-                    3.3,
-                    3.3
+                    3.6,
+                    3.6
                   ],
                   "lane_offsets": [
-                    1.65,
-                    -1.65
+                    1.8,
+                    -1.8
                   ],
                   "divider_offsets": [
                     0.0
                   ],
                   "centre": null,
-                  "drive_left": 3.3,
-                  "drive_right": -3.3,
+                  "drive_left": 3.6,
+                  "drive_right": -3.6,
                   "parking_left": 0.0,
                   "parking_right": 0.0,
-                  "shoulder_left": 0.0,
-                  "shoulder_right": 0.0,
+                  "shoulder_left": 1.9,
+                  "shoulder_right": 1.9,
                   "turns_forward": [],
                   "turns_backward": [],
                   "confidence": "mapped-counts/estimated-widths",
@@ -3334,32 +3417,34 @@
                   "notes": [
                     "left parking mapping unavailable; no dedicated parking modeled",
                     "right parking mapping unavailable; no dedicated parking modeled",
-                    "class lane width estimated"
+                    "class lane width estimated",
+                    "unmapped non-driving margins retained from canonical Legacy pavement envelope"
                   ],
                   "mapped_width": null,
-                  "envelope_width": 6.6,
+                  "envelope_width": 11.0,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id004": {
                   "forward": 1,
                   "backward": 0,
                   "direction": 1,
                   "lane_widths": [
-                    3.3
+                    3.6
                   ],
                   "lane_offsets": [
                     0.0
                   ],
                   "divider_offsets": [],
                   "centre": null,
-                  "drive_left": 1.65,
-                  "drive_right": -1.65,
+                  "drive_left": 1.8,
+                  "drive_right": -1.8,
                   "parking_left": 0.0,
                   "parking_right": 0.0,
-                  "shoulder_left": 0.0,
-                  "shoulder_right": 0.0,
+                  "shoulder_left": 1.2,
+                  "shoulder_right": 1.2,
                   "turns_forward": [],
                   "turns_backward": [],
                   "confidence": "mapped-counts/estimated-widths",
@@ -3367,57 +3452,59 @@
                   "notes": [
                     "left parking mapping unavailable; no dedicated parking modeled",
                     "right parking mapping unavailable; no dedicated parking modeled",
-                    "class lane width estimated"
+                    "class lane width estimated",
+                    "unmapped non-driving margins retained from canonical Legacy pavement envelope"
                   ],
                   "mapped_width": null,
-                  "envelope_width": 3.3,
+                  "envelope_width": 6.0,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 }
               },
               "fallbacks": {}
             },
             "polygons": 1,
             "holes": 0,
-            "earcutTriangles": 80,
-            "geosCorners": 5,
+            "earcutTriangles": 13,
+            "geosCorners": 0,
             "backend": "geos",
-            "footprintMs": 2.94,
-            "inputVertices": 5376,
-            "compactedVertices": 2650,
-            "meshMs": 10.824,
-            "vertices": 2650,
-            "triangles": 2560,
+            "footprintMs": 1.276,
+            "inputVertices": 3063,
+            "compactedVertices": 1527,
+            "meshMs": 6.585,
+            "vertices": 1527,
+            "triangles": 1497,
             "version": "2",
-            "meshBytes": 451187
+            "meshBytes": 91958
           }
         }
       },
       "regionCache": {
-        "hits": 4,
+        "hits": 478,
         "misses": 1,
         "matched": 0,
         "fallbacks": 0
       }
     },
     "roundabout": {
-      "preprocessingColdMs": 346.2113000023237,
+      "preprocessingColdMs": 396.8438999982027,
       "preprocessingHit": {
-        "p50Ms": 3.1037000007927418,
-        "p95Ms": 3.658859999995911
+        "p50Ms": 3.213699998013908,
+        "p95Ms": 3.8465099994937186
       },
-      "cacheBytes": 2803,
+      "cacheBytes": 2831,
       "combinations": {
         "legacy+legacy": {
-          "p50Ms": 52.56350000126986,
-          "p95Ms": 55.2169699989463,
+          "p50Ms": 28.602099999261554,
+          "p95Ms": 29.61026999873866,
           "graph": {
-            "p50Ms": 0.6212000007508323,
-            "p95Ms": 0.6860399997094646
+            "p50Ms": 0.7578999975521583,
+            "p95Ms": 1.050809999287594
           },
-          "triangles": 2010,
-          "meshBytes": 330287,
+          "triangles": 858,
+          "meshBytes": 260695,
           "graphNodes": 8,
           "graphEdges": 8,
           "intelligence": null,
@@ -3429,14 +3516,14 @@
           "diagnostics": null
         },
         "geos+legacy": {
-          "p50Ms": 181.81950000143843,
-          "p95Ms": 185.8224900013738,
+          "p50Ms": 154.470700003003,
+          "p95Ms": 156.1560099988128,
           "graph": {
-            "p50Ms": 0.5954000007477589,
-            "p95Ms": 0.6274900002608774
+            "p50Ms": 0.7178999985626433,
+            "p95Ms": 0.7750400007353164
           },
-          "triangles": 2094,
-          "meshBytes": 350382,
+          "triangles": 940,
+          "meshBytes": 280094,
           "graphNodes": 8,
           "graphEdges": 8,
           "intelligence": null,
@@ -3448,25 +3535,25 @@
           "diagnostics": {
             "polygons": 1,
             "holes": 1,
-            "earcutTriangles": 84,
+            "earcutTriangles": 82,
             "geosCorners": 6,
             "backend": "geos",
-            "footprintMs": 3.136,
-            "inputVertices": 30020,
-            "compactedVertices": 2160,
-            "meshMs": 27.052,
-            "vertices": 2160,
-            "triangles": 2094,
+            "footprintMs": 3.147,
+            "inputVertices": 2074,
+            "compactedVertices": 996,
+            "meshMs": 5.396,
+            "vertices": 996,
+            "triangles": 940,
             "version": "2",
-            "meshBytes": 350382
+            "meshBytes": 280094
           }
         },
         "legacy+sumo": {
-          "p50Ms": 44.01040000084322,
-          "p95Ms": 45.55185999961395,
+          "p50Ms": 44.84470000170404,
+          "p95Ms": 46.22347000076843,
           "graph": {
-            "p50Ms": 1.2772999980370514,
-            "p95Ms": 1.4448900001298168
+            "p50Ms": 1.4168999987305142,
+            "p95Ms": 1.6349999990779904
           },
           "triangles": 2046,
           "meshBytes": 331570,
@@ -3522,7 +3609,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -3561,7 +3649,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -3598,17 +3687,18 @@
               "envelope_width": 6.6,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": null
         },
         "geos+sumo": {
-          "p50Ms": 174.83569999967585,
-          "p95Ms": 210.14727999936437,
+          "p50Ms": 172.46670000167796,
+          "p95Ms": 185.6454400000075,
           "graph": {
-            "p50Ms": 1.29920000108541,
-            "p95Ms": 1.420819998384104
+            "p50Ms": 1.4937999985704664,
+            "p95Ms": 1.601880000453093
           },
           "triangles": 2148,
           "meshBytes": 351881,
@@ -3664,7 +3754,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -3703,7 +3794,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -3740,7 +3832,8 @@
               "envelope_width": 6.6,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": {
@@ -3784,7 +3877,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id001": {
                   "forward": 2,
@@ -3823,7 +3917,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id002": {
                   "forward": 2,
@@ -3860,7 +3955,8 @@
                   "envelope_width": 6.6,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 }
               },
               "fallbacks": {}
@@ -3870,10 +3966,10 @@
             "earcutTriangles": 102,
             "geosCorners": 6,
             "backend": "geos",
-            "footprintMs": 4.149,
+            "footprintMs": 3.906,
             "inputVertices": 16674,
             "compactedVertices": 2224,
-            "meshMs": 21.895,
+            "meshMs": 19.566,
             "vertices": 2224,
             "triangles": 2148,
             "version": "2",
@@ -3882,26 +3978,26 @@
         }
       },
       "regionCache": {
-        "hits": 2,
+        "hits": 586,
         "misses": 1,
         "matched": 0,
         "fallbacks": 0
       }
     },
     "bridge": {
-      "preprocessingColdMs": 369.8095999970974,
+      "preprocessingColdMs": 378.6011999982293,
       "preprocessingHit": {
-        "p50Ms": 3.146700000797864,
-        "p95Ms": 13.382620000993475
+        "p50Ms": 3.0559000006178394,
+        "p95Ms": 3.671809998559183
       },
-      "cacheBytes": 2940,
+      "cacheBytes": 2968,
       "combinations": {
         "legacy+legacy": {
-          "p50Ms": 15.362300000560936,
-          "p95Ms": 17.35907999900519,
+          "p50Ms": 13.882300001569092,
+          "p95Ms": 14.349249998485902,
           "graph": {
-            "p50Ms": 0.5820999977004249,
-            "p95Ms": 1.049310001690173
+            "p50Ms": 0.540299999556737,
+            "p95Ms": 0.7181499982834793
           },
           "triangles": 1964,
           "meshBytes": 159987,
@@ -3917,11 +4013,11 @@
           "diagnostics": null
         },
         "geos+legacy": {
-          "p50Ms": 32.30210000037914,
-          "p95Ms": 51.790760000585564,
+          "p50Ms": 29.237999999168096,
+          "p95Ms": 29.36273999803234,
           "graph": {
-            "p50Ms": 0.5654999986290932,
-            "p95Ms": 0.6380700004228855
+            "p50Ms": 0.565199999982724,
+            "p95Ms": 0.6689099984214408
           },
           "triangles": 1968,
           "meshBytes": 160354,
@@ -3940,10 +4036,10 @@
             "earcutTriangles": 4,
             "geosCorners": 0,
             "backend": "geos",
-            "footprintMs": 0.582,
+            "footprintMs": 0.506,
             "inputVertices": 2908,
             "compactedVertices": 2014,
-            "meshMs": 5.321,
+            "meshMs": 4.239,
             "vertices": 2014,
             "triangles": 1968,
             "version": "2",
@@ -3951,11 +4047,11 @@
           }
         },
         "legacy+sumo": {
-          "p50Ms": 20.47080000193091,
-          "p95Ms": 23.465449998911936,
+          "p50Ms": 17.16409999789903,
+          "p95Ms": 17.852259998835507,
           "graph": {
-            "p50Ms": 1.3378000003285706,
-            "p95Ms": 2.5615600006858577
+            "p50Ms": 1.4377000006788876,
+            "p95Ms": 1.520420000088052
           },
           "triangles": 2828,
           "meshBytes": 212638,
@@ -4013,7 +4109,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -4052,7 +4149,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             null,
             null
@@ -4060,11 +4158,11 @@
           "diagnostics": null
         },
         "geos+sumo": {
-          "p50Ms": 37.78679999959422,
-          "p95Ms": 44.34448000029078,
+          "p50Ms": 32.523600002605235,
+          "p95Ms": 33.317819999865605,
           "graph": {
-            "p50Ms": 1.2667000009969342,
-            "p95Ms": 1.3719800008402672
+            "p50Ms": 1.4191000009304844,
+            "p95Ms": 1.5656899995519777
           },
           "triangles": 2832,
           "meshBytes": 213005,
@@ -4122,7 +4220,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -4161,7 +4260,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             null,
             null
@@ -4207,7 +4307,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id001": {
                   "forward": 2,
@@ -4246,7 +4347,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 }
               },
               "fallbacks": {}
@@ -4256,10 +4358,10 @@
             "earcutTriangles": 4,
             "geosCorners": 0,
             "backend": "geos",
-            "footprintMs": 0.577,
+            "footprintMs": 0.507,
             "inputVertices": 4444,
             "compactedVertices": 2894,
-            "meshMs": 7.083,
+            "meshMs": 7.146,
             "vertices": 2894,
             "triangles": 2832,
             "version": "2",
@@ -4268,26 +4370,26 @@
         }
       },
       "regionCache": {
-        "hits": 3,
+        "hits": 555,
         "misses": 1,
         "matched": 0,
         "fallbacks": 0
       }
     },
     "cross_left_hand": {
-      "preprocessingColdMs": 381.97740000032354,
+      "preprocessingColdMs": 382.2188999984064,
       "preprocessingHit": {
-        "p50Ms": 6.611000000702916,
-        "p95Ms": 7.2701699999015545
+        "p50Ms": 3.4234999984619208,
+        "p95Ms": 3.973329997825203
       },
-      "cacheBytes": 3383,
+      "cacheBytes": 3411,
       "combinations": {
         "legacy+legacy": {
-          "p50Ms": 40.689699999347795,
-          "p95Ms": 46.08989000080328,
+          "p50Ms": 30.921599998691818,
+          "p95Ms": 31.518419998974423,
           "graph": {
-            "p50Ms": 0.7003000027907547,
-            "p95Ms": 1.149689999510883
+            "p50Ms": 0.8899000022211112,
+            "p95Ms": 1.1396300003980286
           },
           "triangles": 1656,
           "meshBytes": 317625,
@@ -4303,11 +4405,11 @@
           "diagnostics": null
         },
         "geos+legacy": {
-          "p50Ms": 174.97240000011516,
-          "p95Ms": 210.60966999975787,
+          "p50Ms": 144.14079999914975,
+          "p95Ms": 147.19651000086742,
           "graph": {
-            "p50Ms": 0.6523999982164241,
-            "p95Ms": 1.207240000076126
+            "p50Ms": 0.8974999982456211,
+            "p95Ms": 0.9489100011705887
           },
           "triangles": 1718,
           "meshBytes": 333472,
@@ -4326,10 +4428,10 @@
             "earcutTriangles": 62,
             "geosCorners": 4,
             "backend": "geos",
-            "footprintMs": 2.63,
+            "footprintMs": 2.406,
             "inputVertices": 3626,
             "compactedVertices": 1784,
-            "meshMs": 8.706,
+            "meshMs": 8.511,
             "vertices": 1784,
             "triangles": 1718,
             "version": "2",
@@ -4337,11 +4439,11 @@
           }
         },
         "legacy+sumo": {
-          "p50Ms": 43.0369999994582,
-          "p95Ms": 59.30533000100695,
+          "p50Ms": 36.586000001989305,
+          "p95Ms": 37.01740999931644,
           "graph": {
-            "p50Ms": 2.4658000002091285,
-            "p95Ms": 3.3454100001108595
+            "p50Ms": 1.7140000018116552,
+            "p95Ms": 1.9755100005568236
           },
           "triangles": 2800,
           "meshBytes": 387460,
@@ -4398,7 +4500,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -4437,7 +4540,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -4476,7 +4580,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -4515,17 +4620,18 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": null
         },
         "geos+sumo": {
-          "p50Ms": 175.02370000147494,
-          "p95Ms": 182.89481999927375,
+          "p50Ms": 148.92800000234274,
+          "p95Ms": 149.995640000634,
           "graph": {
-            "p50Ms": 1.768800000718329,
-            "p95Ms": 3.151869999419432
+            "p50Ms": 1.6235000002779998,
+            "p95Ms": 2.291259997946326
           },
           "triangles": 2862,
           "meshBytes": 403307,
@@ -4582,7 +4688,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -4621,7 +4728,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -4660,7 +4768,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -4699,7 +4808,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": {
@@ -4743,7 +4853,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id001": {
                   "forward": 2,
@@ -4782,7 +4893,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id002": {
                   "forward": 2,
@@ -4821,7 +4933,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id003": {
                   "forward": 2,
@@ -4860,7 +4973,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 }
               },
               "fallbacks": {}
@@ -4870,10 +4984,10 @@
             "earcutTriangles": 62,
             "geosCorners": 4,
             "backend": "geos",
-            "footprintMs": 2.285,
+            "footprintMs": 2.373,
             "inputVertices": 5962,
             "compactedVertices": 2952,
-            "meshMs": 12.835,
+            "meshMs": 13.082,
             "vertices": 2952,
             "triangles": 2862,
             "version": "2",
@@ -4882,29 +4996,29 @@
         }
       },
       "regionCache": {
-        "hits": 3,
+        "hits": 609,
         "misses": 1,
         "matched": 0,
         "fallbacks": 0
       }
     },
     "roundabout_left_hand": {
-      "preprocessingColdMs": 390.3153999999631,
+      "preprocessingColdMs": 383.7932999995246,
       "preprocessingHit": {
-        "p50Ms": 3.7018999973952305,
-        "p95Ms": 5.252930000278865
+        "p50Ms": 3.147000003082212,
+        "p95Ms": 3.842470000017783
       },
-      "cacheBytes": 2802,
+      "cacheBytes": 2830,
       "combinations": {
         "legacy+legacy": {
-          "p50Ms": 56.09960000219871,
-          "p95Ms": 76.29926999907184,
+          "p50Ms": 28.64219999901252,
+          "p95Ms": 29.271679999874323,
           "graph": {
-            "p50Ms": 0.5902000011701602,
-            "p95Ms": 0.6887599996844073
+            "p50Ms": 0.7191999975475483,
+            "p95Ms": 0.856739999653655
           },
-          "triangles": 2011,
-          "meshBytes": 330339,
+          "triangles": 858,
+          "meshBytes": 260695,
           "graphNodes": 8,
           "graphEdges": 8,
           "intelligence": null,
@@ -4916,14 +5030,14 @@
           "diagnostics": null
         },
         "geos+legacy": {
-          "p50Ms": 206.59580000210553,
-          "p95Ms": 248.68203999940306,
+          "p50Ms": 155.51179999965825,
+          "p95Ms": 157.6000800010661,
           "graph": {
-            "p50Ms": 0.5990999998175539,
-            "p95Ms": 0.6120400004874682
+            "p50Ms": 0.7087000012688804,
+            "p95Ms": 0.7617200000822777
           },
-          "triangles": 2095,
-          "meshBytes": 350434,
+          "triangles": 940,
+          "meshBytes": 280094,
           "graphNodes": 8,
           "graphEdges": 8,
           "intelligence": null,
@@ -4935,25 +5049,25 @@
           "diagnostics": {
             "polygons": 1,
             "holes": 1,
-            "earcutTriangles": 84,
+            "earcutTriangles": 82,
             "geosCorners": 6,
             "backend": "geos",
-            "footprintMs": 3.369,
-            "inputVertices": 30021,
-            "compactedVertices": 2161,
-            "meshMs": 29.851,
-            "vertices": 2161,
-            "triangles": 2095,
+            "footprintMs": 2.968,
+            "inputVertices": 2074,
+            "compactedVertices": 996,
+            "meshMs": 4.947,
+            "vertices": 996,
+            "triangles": 940,
             "version": "2",
-            "meshBytes": 350434
+            "meshBytes": 280094
           }
         },
         "legacy+sumo": {
-          "p50Ms": 48.23000000033062,
-          "p95Ms": 54.114799999661045,
+          "p50Ms": 44.313900001725415,
+          "p95Ms": 44.81203000214009,
           "graph": {
-            "p50Ms": 1.372599999740487,
-            "p95Ms": 2.672569999413098
+            "p50Ms": 1.63050000264775,
+            "p95Ms": 1.666089999343967
           },
           "triangles": 2048,
           "meshBytes": 331690,
@@ -5009,7 +5123,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -5048,7 +5163,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -5085,17 +5201,18 @@
               "envelope_width": 6.6,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": null
         },
         "geos+sumo": {
-          "p50Ms": 181.30160000146134,
-          "p95Ms": 213.55442999883962,
+          "p50Ms": 177.1673999974155,
+          "p95Ms": 178.8632099985989,
           "graph": {
-            "p50Ms": 1.3496999999915715,
-            "p95Ms": 1.8088800014083972
+            "p50Ms": 1.410000000760192,
+            "p95Ms": 1.672630001485231
           },
           "triangles": 2150,
           "meshBytes": 352001,
@@ -5151,7 +5268,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -5190,7 +5308,8 @@
               "envelope_width": 9.9,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             },
             {
               "forward": 2,
@@ -5227,7 +5346,8 @@
               "envelope_width": 6.6,
               "sidewalk_sides": null,
               "arrows_forward": false,
-              "arrows_backward": false
+              "arrows_backward": false,
+              "speed_kmh": null
             }
           ],
           "diagnostics": {
@@ -5271,7 +5391,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id001": {
                   "forward": 2,
@@ -5310,7 +5431,8 @@
                   "envelope_width": 9.9,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 },
                 "id002": {
                   "forward": 2,
@@ -5347,7 +5469,8 @@
                   "envelope_width": 6.6,
                   "sidewalk_sides": null,
                   "arrows_forward": false,
-                  "arrows_backward": false
+                  "arrows_backward": false,
+                  "speed_kmh": null
                 }
               },
               "fallbacks": {}
@@ -5357,10 +5480,10 @@
             "earcutTriangles": 102,
             "geosCorners": 6,
             "backend": "geos",
-            "footprintMs": 3.737,
+            "footprintMs": 4.034,
             "inputVertices": 16676,
             "compactedVertices": 2226,
-            "meshMs": 17.092,
+            "meshMs": 18.778,
             "vertices": 2226,
             "triangles": 2150,
             "version": "2",
@@ -5369,7 +5492,7 @@
         }
       },
       "regionCache": {
-        "hits": 2,
+        "hits": 586,
         "misses": 1,
         "matched": 0,
         "fallbacks": 0
@@ -5379,131 +5502,131 @@
   "scope": "cold extract/SUMO conversion, warm region cache, road tile generation/export, navigation, terrain masks and grading; excludes downloads and engine frame times",
   "terrain": {
     "legacy": {
-      "p50Ms": 97.77460000259452,
-      "p95Ms": 106.7964399997436,
+      "p50Ms": 93.43680000165477,
+      "p95Ms": 99.12848999883863,
       "samples": [
         {
-          "heights": 0.06876030000057654,
-          "grading": 0.021749699997599237,
+          "heights": 0.06695879999824683,
+          "grading": 0.0213103999994928,
           "gradingCpu": 0.015625,
-          "heightsCpu": 0.046875,
-          "landcover": 0.00420269999813172,
-          "roadPaint": 0.002785000000585569
+          "heightsCpu": 0.0625,
+          "landcover": 0.004334299999754876,
+          "roadPaint": 0.003091499998845393
         },
         {
-          "heights": 0.06434789999912027,
-          "grading": 0.02121180000176537,
+          "heights": 0.05868850000115344,
+          "grading": 0.021059000002424,
           "gradingCpu": 0.03125,
+          "heightsCpu": 0.0625,
+          "landcover": 0.0038877000006323215,
+          "roadPaint": 0.002732199998717988
+        },
+        {
+          "heights": 0.05782109999927343,
+          "grading": 0.020693399997981032,
+          "gradingCpu": 0.015625,
           "heightsCpu": 0.046875,
-          "landcover": 0.004367800000181887,
-          "roadPaint": 0.0030157000001054257
+          "landcover": 0.004034499997942476,
+          "roadPaint": 0.0026076000031025615
         },
         {
-          "heights": 0.060038100000383565,
-          "grading": 0.022150700002384838,
+          "heights": 0.058315500002208864,
+          "grading": 0.021126100000401493,
           "gradingCpu": 0.015625,
-          "heightsCpu": 0.0625,
-          "landcover": 0.004768900002090959,
-          "roadPaint": 0.002723800000239862
+          "heightsCpu": 0.046875,
+          "landcover": 0.004076899997016881,
+          "roadPaint": 0.002627800000482239
         },
         {
-          "heights": 0.06067899999834481,
-          "grading": 0.02194020000024466,
+          "heights": 0.057309200001327554,
+          "grading": 0.02092389999961597,
           "gradingCpu": 0.015625,
           "heightsCpu": 0.0625,
-          "landcover": 0.004140100001677638,
-          "roadPaint": 0.0028763000009348616
+          "landcover": 0.004368900001281872,
+          "roadPaint": 0.002737600003456464
         },
         {
-          "heights": 0.06272279999757302,
-          "grading": 0.021571000001131324,
+          "heights": 0.05850009999994654,
+          "grading": 0.021241999998892425,
           "gradingCpu": 0.015625,
           "heightsCpu": 0.0625,
-          "landcover": 0.004287600000679959,
-          "roadPaint": 0.0028109000013500918
+          "landcover": 0.0039806999993743375,
+          "roadPaint": 0.002636900000652531
         },
         {
-          "heights": 0.060040599997591926,
-          "grading": 0.022216000001208158,
+          "heights": 0.05911209999976563,
+          "grading": 0.021273599999403814,
           "gradingCpu": 0.015625,
           "heightsCpu": 0.0625,
-          "landcover": 0.004287700001441408,
-          "roadPaint": 0.0027417000019340776
-        },
-        {
-          "heights": 0.05993989999842597,
-          "grading": 0.022069899998314213,
-          "gradingCpu": 0.015625,
-          "heightsCpu": 0.0625,
-          "landcover": 0.004288600001018494,
-          "roadPaint": 0.0027596999971137848
+          "landcover": 0.004327300001023104,
+          "roadPaint": 0.0029712999967159703
         }
       ],
       "description": "512x512 physics block, 2m samples, fresh anchor, synthetic DEM + landcover, graded roads and .ter/friction-mask writes"
     },
     "sumo": {
-      "p50Ms": 96.24199999962002,
-      "p95Ms": 103.41685999846959,
+      "p50Ms": 94.35020000091754,
+      "p95Ms": 96.65752000073553,
       "samples": [
         {
-          "heights": 0.06667020000168122,
-          "grading": 0.023519099999248283,
-          "gradingCpu": 0.03125,
-          "heightsCpu": 0.0625,
-          "landcover": 0.004344200002378784,
-          "roadPaint": 0.003153800000291085
-        },
-        {
-          "heights": 0.06271229999765637,
-          "grading": 0.022388699999282835,
+          "heights": 0.05895830000008573,
+          "grading": 0.022388500001397915,
           "gradingCpu": 0.015625,
           "heightsCpu": 0.0625,
-          "landcover": 0.00456800000029034,
-          "roadPaint": 0.0028520999985630624
+          "landcover": 0.004274700000678422,
+          "roadPaint": 0.0029662999986612704
         },
         {
-          "heights": 0.05841329999748268,
-          "grading": 0.021824499999638647,
+          "heights": 0.05939579999903799,
+          "grading": 0.021742599998106016,
           "gradingCpu": 0.015625,
           "heightsCpu": 0.046875,
-          "landcover": 0.003986299998359755,
-          "roadPaint": 0.00289859999975306
+          "landcover": 0.004379999998491257,
+          "roadPaint": 0.003054999997402774
         },
         {
-          "heights": 0.058451099997910205,
-          "grading": 0.022253400002227863,
-          "gradingCpu": 0.015625,
-          "heightsCpu": 0.046875,
-          "landcover": 0.004302199999074219,
-          "roadPaint": 0.0030300999969767872
-        },
-        {
-          "heights": 0.06070990000080201,
-          "grading": 0.0245162999999593,
-          "gradingCpu": 0.015625,
-          "heightsCpu": 0.046875,
-          "landcover": 0.004209900002024369,
-          "roadPaint": 0.0027875000014319085
-        },
-        {
-          "heights": 0.05956520000108867,
-          "grading": 0.023491399999329587,
-          "gradingCpu": 0.03125,
-          "heightsCpu": 0.0625,
-          "landcover": 0.004121800000575604,
-          "roadPaint": 0.002856300001440104
-        },
-        {
-          "heights": 0.058414600000105565,
-          "grading": 0.021916800000326475,
+          "heights": 0.05719350000072154,
+          "grading": 0.02110040000115987,
           "gradingCpu": 0.015625,
           "heightsCpu": 0.0625,
-          "landcover": 0.004087799999979325,
-          "roadPaint": 0.0028609000000869855
+          "landcover": 0.0042751000000862405,
+          "roadPaint": 0.0029375000012805685
+        },
+        {
+          "heights": 0.05732659999921452,
+          "grading": 0.021080099999380764,
+          "gradingCpu": 0.015625,
+          "heightsCpu": 0.0625,
+          "landcover": 0.004049400002259063,
+          "roadPaint": 0.0028558000012708362
+        },
+        {
+          "heights": 0.05792970000038622,
+          "grading": 0.02119930000117165,
+          "gradingCpu": 0.015625,
+          "heightsCpu": 0.0625,
+          "landcover": 0.004378099998575635,
+          "roadPaint": 0.0034140999996452592
+        },
+        {
+          "heights": 0.05940740000005462,
+          "grading": 0.02150170000095386,
+          "gradingCpu": 0.015625,
+          "heightsCpu": 0.0625,
+          "landcover": 0.00416390000100364,
+          "roadPaint": 0.00344789999871864
+        },
+        {
+          "heights": 0.061562399998365436,
+          "grading": 0.02276210000127321,
+          "gradingCpu": 0.015625,
+          "heightsCpu": 0.046875,
+          "landcover": 0.0040989000008266885,
+          "roadPaint": 0.002853900001355214
         }
       ],
       "description": "512x512 physics block, 2m samples, fresh anchor, synthetic DEM + landcover, graded roads and .ter/friction-mask writes"
     }
   },
-  "processRssBytes": 104554496
+  "processRssBytes": 103518208
 }

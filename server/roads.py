@@ -829,7 +829,7 @@ def bridge_specs(feats):
     got = feats.__dict__.get("_bridge_specs")      # remembered: cells stay decoded (mapdata)
     if got is None:
         from roadintel_ext.runtime import effective_specs
-        got = feats.__dict__["_bridge_specs"] = effective_specs(feats, _bridge_specs(feats))
+        got = feats.__dict__["_bridge_specs"] = effective_specs(feats, _bridge_specs(feats), "bridge")
     return list(got)
 
 
@@ -838,7 +838,7 @@ def tunnel_specs(feats):
     got = feats.__dict__.get("_tunnel_specs")
     if got is None:
         from roadintel_ext.runtime import effective_specs
-        got = feats.__dict__["_tunnel_specs"] = effective_specs(feats, _bridge_specs(feats, "tunnel"))
+        got = feats.__dict__["_tunnel_specs"] = effective_specs(feats, _bridge_specs(feats, "tunnel"), "tunnel")
     return list(got)
 
 
@@ -3824,7 +3824,7 @@ def build_tile(frame, tx, ty, cells, elev, urban_fn=None, walks=None, bridges=No
         for fid, (f, i, sp) in seen.items():
             if sp.oneway:
                 v = _rule_value(f.rules.get("oneway"), i)
-                dirs[fid] = (-1 if float(v) < 0 else 1) if v is not None else (sp.dir or 1)
+                dirs[fid] = sp.dir if sp.intel is not None else ((-1 if float(v) < 0 else 1) if v is not None else (sp.dir or 1))
         park.extend(parking.curb_spots(roads, walks, (x0, y0, x1, y1), left_hand, dirs))
         aisles = {fid for fid, (f, i, sp) in seen.items()
                   if sp.kind == "paved" and _rule_value(f.rules.get("subclass"), i) == "parking_aisle"}

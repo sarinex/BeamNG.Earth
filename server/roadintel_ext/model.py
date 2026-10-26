@@ -60,6 +60,7 @@ class CrossSection:
     sidewalk_sides: object = None
     arrows_forward: bool = False
     arrows_backward: bool = False
+    speed_kmh: object = None
 
     @property
     def driving_width(self):
@@ -149,6 +150,11 @@ def normalize(tags, spec, *, reverse=False, left_hand=False, provenance="OSM ext
         lane_width = available / total if available is not None else roads.LANE_W.get(spec.cls, roads.LANE_W_DEFAULT)
         widths = (lane_width,) * total
         notes.append("lane widths allocated from mapped total width" if mapped_width else "class lane width estimated")
+        if mapped_width is None:
+            extra = max(0., spec.width - sum(widths) - sum(parking) - sum(shoulder))
+            if extra:
+                shoulder = [s + extra / 2 for s in shoulder]
+                notes.append("unmapped non-driving margins retained from canonical Legacy pavement envelope")
     elif available is not None and abs(sum(widths) - available) > 0.5:
         raise ValueError("mapped lane widths conflict with mapped total width")
     if any(w < 1.8 or w > 5.5 for w in widths):
@@ -171,6 +177,8 @@ def normalize(tags, spec, *, reverse=False, left_hand=False, provenance="OSM ext
     centre = boundaries[left_count - 1] if f and b else None
     dividers = tuple(v for j, v in enumerate(boundaries[:-1]) if j + 1 != left_count or centre is None)
     envelope = sum(widths) + sum(parking) + sum(shoulder)
+    if not 2 <= envelope <= 40:
+        raise ValueError("cross-section outside the existing 2..40 m pavement bounds")
     sidewalk_sides = None
     sidewalk = tags.get("sidewalk")
     if sidewalk in ("no", "none", "separate", "both", "yes", "left", "right"):

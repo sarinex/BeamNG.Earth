@@ -21,7 +21,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILES = ["install.py", "start.py", "launcher.py", "bmplaunch.py", "run_server.bat", "run_server.sh", "README.md", "LICENSE", "CREDITS.md",
          "VERSION", "docs/QUICKSTART.md", "docs/UPSTREAM_INTEGRATION.md", "docs/ROADGEOM_EVALUATION.md",
          "docs/roadgeom-benchmark.json", "docs/ROADINTEL.md", "docs/ROADINTEL_EVALUATION.md",
-         "docs/roadintel-benchmark.json"]
+         "docs/roadintel-benchmark.json", "docs/roadintel-verification.json"]
 TREES = ["mod/beamng_earth", "server"]
 TOOLS = ["tools/reports.py", "tools/prepare_roadintel.py"]  # reports and optional offline region preparation
 SKIP_DIRS = {"__pycache__", "tests", ".git", "backups", "probes", "research", ".venv", "dist"}

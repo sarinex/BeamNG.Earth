@@ -5,6 +5,7 @@ local intelDesired, intelActive, intelAccepted = 'legacy', 'legacy', 'legacy'
 local intelSupported, terrainReady, navRequired, navEpochs, navReady = false, true, false, false, true
 local terrainFailure = nil
 local terrainSwitch = false
+local terrainBlocked = false
 local supported, epoch, pending, phase = nil, nil, nil, nil
 local text, elapsed, still = 'Legacy (Original)', 0, 0
 local held, wasPaused, complete = false, false, false
@@ -75,7 +76,7 @@ function M.hello(cap, saved, savedIntel)
   epoch = supported and cap.epoch or nil
   accepted = supported and cap.active or 'legacy'
   awaiting, phase, complete, serverKnown, failure = nil, nil, false, true, nil
-  incomplete = supported and recovering or false
+  incomplete = terrainBlocked or (supported and recovering or false)
   if incomplete then active, intelActive = nil, nil else active, lastLoaded = accepted, accepted end
   text = activeText()
   still = 0
@@ -129,9 +130,12 @@ function M.accept(msg)
   return epoch == nil or (msg.roadEpoch == epoch and msg.roadBackend == accepted)
 end
 
-function M.terrainLoaded() terrainReady = true end
+function M.terrainLoaded() terrainReady, terrainBlocked = true, false end
 function M.terrainAccept(msg) return held and phase == 'loading' and msg.roadEpoch == epoch end
-function M.terrainFailed(reason) terrainFailure = reason end
+function M.terrainFailed(reason, blocked)
+  terrainFailure = terrainFailure or reason
+  if blocked ~= nil then terrainBlocked = blocked == true end
+end
 function M.navigation(msg)
   if not navEpochs then return true end
   if not M.accept(msg) then return false end
@@ -163,7 +167,7 @@ end
 function M.cancel(pause, roads)
   if held then pause(wasPaused); roads.setHold(false) end
   if phase == 'request' or phase == 'loading' then active, intelActive, incomplete = nil, nil, true end
-  held, phase, pending, still = false, nil, nil, 0
+  held, phase, pending, still, terrainBlocked = false, nil, nil, 0, false
 end
 
 function M.progress(msg)
@@ -178,11 +182,12 @@ end
 
 function M.update(dt, ctx)
   if held then ctx.roads.setHold(true) end
-  if held and not phase and not pending then
+  if held and terrainBlocked then ctx.pause(true) end
+  if held and not phase and not pending and not terrainBlocked then
     release(ctx)
   end
   if not ctx.connected then
-    release(ctx)
+    if not terrainBlocked then release(ctx) end
     if phase == 'request' or phase == 'loading' or incomplete then
       markIncomplete('Road geometry incomplete; companion disconnected. Reconnect to retry or restore ' .. lastLoaded)
     else phase = nil end
@@ -190,15 +195,18 @@ function M.update(dt, ctx)
     if pending then text = 'Pending ' .. pending .. ': companion server disconnected' end
     return
   end
-  if phase == 'incomplete' then release(ctx); return end
+  if phase == 'incomplete' then
+    if not terrainBlocked then release(ctx) else ctx.pause(true) end
+    return
+  end
   if phase == 'request' or phase == 'loading' then
     elapsed = elapsed + dt
     if terrainFailure then
       markIncomplete('Terrain rebuild failed: ' .. tostring(terrainFailure) .. '; select Legacy to rebuild')
-      release(ctx)
+      if not terrainBlocked then release(ctx) end
       return
     end
-    if phase == 'loading' and complete and terrainReady and navReady and ctx.settled() then
+    if phase == 'loading' and complete and terrainReady and not terrainBlocked and navReady and ctx.settled() then
       active, lastLoaded, phase, incomplete, failure = accepted, accepted, nil, false, nil
       intelActive = intelAccepted
       pending = (desired ~= active or intelDesired ~= intelActive) and desired or nil
@@ -210,7 +218,7 @@ function M.update(dt, ctx)
         or intelDesired ~= (loading and intelAccepted or awaiting.intelligence)) and desired or nil
       if not loading then serverKnown = false end
       markIncomplete('Road geometry timed out; select a generator to retry or restore ' .. lastLoaded)
-      release(ctx)
+      if not terrainBlocked then release(ctx) end
       if queued then M.request(queued) end
     end
     return
@@ -225,10 +233,11 @@ function M.update(dt, ctx)
   if still < 1 then text = 'Pending ' .. pending .. ': stop the vehicle to rebuild roads'; return end
   local safe, reason = ctx.safe, nil
   if type(safe) == 'function' then safe, reason = safe() end
+  if terrainBlocked and held then safe = true end -- recover missing support under the existing stationary hold
   if not safe then text = 'Pending ' .. pending .. ': ' .. (reason or 'stop on terrain, clear of bridges, tunnels and curbs'); return end
   if not held then wasPaused, held = ctx.paused(), true; ctx.pause(true) end
   ctx.roads.setHold(true)
-  phase, elapsed, failure, serverKnown = 'request', 0, nil, false
+  phase, elapsed, failure, terrainFailure, serverKnown = 'request', 0, nil, nil, false
   serial = serial + 1
   awaiting = {id=serial, backend=pending, intelligence=intelDesired}
   ctx.send({ type = 'road_geometry', version = 1, backend = pending, speed = ctx.speed, requestId = serial,
@@ -251,8 +260,9 @@ function M.intelligenceStatus()
     pending=state.pending, epoch=epoch, supported=intelSupported, incomplete=incomplete,
     text=label .. '; requested: ' .. intelDesired .. '; server: ' .. (serverKnown and intelAccepted or 'unconfirmed') ..
       ((diagnostics.intelligenceFallbacks or 0) > 0 and ('; source/layout fallbacks: ' .. diagnostics.intelligenceFallbacks) or '') ..
-      ((state.phase or state.pending or failure) and ('; ' .. state.text) or ''),
-    terrainReady=terrainReady, navReady=navReady, diagnostics=diagnostics}
+      ((state.phase or state.pending or failure) and ('; ' .. state.text) or '') ..
+      (terrainBlocked and '; terrain restoration pending; simulation held' or ''),
+    terrainReady=terrainReady, navReady=navReady, terrainBlocked=terrainBlocked, diagnostics=diagnostics}
 end
 
 function M.needsUpdate() return pending ~= nil or phase == 'request' or phase == 'loading' or held end

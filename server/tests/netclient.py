@@ -15,6 +15,7 @@ def stop_server(proc):
     its spawned pool workers (each holds both ends of its task queue, so no EOF) lived on and kept earthfast.pyd
     locked. Safe to call twice (tearDown, then the cleanup a failed setUp leaves)."""
     kids = _children(proc.pid)
+    handles = _windows_child_handles(proc.pid) if os.name == "nt" and proc.poll() is None else []
     if proc.poll() is None:
         if os.name == "nt":
             subprocess.run(["taskkill", "/T", "/F", "/PID", str(proc.pid)], capture_output=True)
@@ -25,6 +26,14 @@ def stop_server(proc):
     except subprocess.TimeoutExpired:
         proc.kill()
         proc.wait()
+    if handles:
+        # taskkill can return while a descendant still owns an inherited log
+        # handle. Wait on handles captured before termination, avoiding PID reuse.
+        import ctypes
+        end = time.monotonic() + 10
+        for handle in handles:
+            ctypes.windll.kernel32.WaitForSingleObject(handle, max(0, int((end - time.monotonic()) * 1000)))
+            ctypes.windll.kernel32.CloseHandle(handle)
     # its workers exit on their own within blockworker.PARENT_POLL_S, still writing to the session folder until then
     # (a test's temp folder removed under them: "Directory not empty", 1 run in 6)
     end = time.monotonic() + 10
@@ -32,6 +41,47 @@ def stop_server(proc):
         kids = [k for k in kids if os.path.exists(f"/proc/{k}")]
         if kids:
             time.sleep(0.1)
+
+
+def _windows_child_handles(pid):
+    """SYNCHRONIZE handles only for descendants of this test's own server."""
+    import ctypes
+    from ctypes import wintypes
+
+    class Entry(ctypes.Structure):
+        _fields_ = [("dwSize", wintypes.DWORD), ("cntUsage", wintypes.DWORD),
+                    ("th32ProcessID", wintypes.DWORD), ("th32DefaultHeapID", ctypes.c_size_t),
+                    ("th32ModuleID", wintypes.DWORD), ("cntThreads", wintypes.DWORD),
+                    ("th32ParentProcessID", wintypes.DWORD), ("pcPriClassBase", wintypes.LONG),
+                    ("dwFlags", wintypes.DWORD), ("szExeFile", wintypes.WCHAR * 260)]
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+    kernel.OpenProcess.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    snapshot = kernel.CreateToolhelp32Snapshot(2, 0)
+    if snapshot == ctypes.c_void_p(-1).value:
+        return []
+    parents = {}
+    entry = Entry()
+    entry.dwSize = ctypes.sizeof(entry)
+    kernel.Process32FirstW.argtypes = [wintypes.HANDLE, ctypes.POINTER(Entry)]
+    kernel.Process32NextW.argtypes = [wintypes.HANDLE, ctypes.POINTER(Entry)]
+    try:
+        found = kernel.Process32FirstW(snapshot, ctypes.byref(entry))
+        while found:
+            parents[entry.th32ProcessID] = entry.th32ParentProcessID
+            found = kernel.Process32NextW(snapshot, ctypes.byref(entry))
+    finally:
+        kernel.CloseHandle(snapshot)
+    descendants = {pid}
+    while True:
+        more = {child for child, parent in parents.items() if parent in descendants} - descendants
+        if not more:
+            break
+        descendants.update(more)
+    return [wintypes.HANDLE(h) for child in descendants - {pid}
+            if (h := kernel.OpenProcess(0x00100000, False, child))]
 
 
 def _children(pid):

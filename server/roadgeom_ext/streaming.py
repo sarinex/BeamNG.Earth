@@ -83,6 +83,7 @@ class Selection:
         self.backend, self.epoch = "legacy", 0
         self.intelligence, self.dataset, self.awaiting_anchor = "legacy", None, False
         self.nav_required = bool(getattr(server, "traffic", False))
+        self.terrain_capable = bool(getattr(server, "mapdata", None) is not None and getattr(server, "surface", None) is not None)
         self.token = secrets.token_hex(8)
         # Session + anchor + immutable parameters are the generated-file identity; raw map caches stay upstream's.
         config = {k: getattr(server, k, None) for k in
@@ -123,6 +124,8 @@ class Selection:
                 raise ValueError("rebuildTerrain must be a boolean")
             if intelligence not in ("legacy", "sumo"):
                 raise ValueError("road intelligence backend must be legacy or sumo")
+            if intelligence == "sumo" and not self.terrain_capable:
+                raise ValueError("SUMO road intelligence requires roads and terrain surfaces enabled")
             if intelligence == "sumo" and (terrain_rebuild or dataset is None):
                 from roadintel_ext.runtime import open_dataset
                 dataset = open_dataset(os.environ.get("BNGE_ROADINTEL_DIR", ""))

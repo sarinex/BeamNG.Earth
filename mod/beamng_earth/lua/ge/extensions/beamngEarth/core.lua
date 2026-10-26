@@ -301,7 +301,7 @@ end
 -- The server's .ter (terrain.swap) is taken whenever the block exists: ~12 ms, no collision rebuild
 -- (the third result is then true; teleports and rebases rebuild it anyway), and it carries the edge
 -- holes (heightmap.write_ter). The first import of a session takes the .ter right after it too.
-local function loadBlock(tr)
+local function loadBlock(tr, strict)
   local x, y = follow.blockOrigin(tr.cx, tr.cy)
   local sq = tonumber(tr.squareSize) or follow.SQUARE_SIZE
   if math.abs(sq - follow.SQUARE_SIZE) > 1e-9 then
@@ -312,6 +312,14 @@ local function loadBlock(tr)
   if warn then warnOnce('height', 'terrain height scale: ' .. warn) end
   local layers = (type(tr.layers) == 'table' and type(tr.materials) == 'table')
     and { masks = tr.layers, materials = tr.materials } or nil -- server --surface on (surface.py)
+  if strict then
+    if not layers or #layers.masks == 0 or #layers.masks ~= #layers.materials then
+      return false, 'incomplete road intelligence surface layers'
+    end
+    for _, mask in ipairs(layers.masks) do
+      if not FS:fileExists(mask) then return false, 'road intelligence mask not found: ' .. tostring(mask) end
+    end
+  end
   if layers then groundcover.ensure() end
   -- detail mode: the block's aerial photo as its base colour (server write_base); else the level's
   -- (false: detail mode without a photo -> the level's flat base; nil: other modes, untouched)
@@ -321,14 +329,16 @@ local function loadBlock(tr)
   if ter and terrain.swap(tr.ter, sq, maxH, x, y, tr.zBase, layers, base, tonumber(tr.baseSize)) then
     roads.terrainSwapped()      -- its collision follows by itself next frame: no other rebuild meanwhile
     groundcover.afterBlockChange()
+    st.loadedTerrain = tr
     return true, nil, true
   end
-  local ok, err = terrain.load(tr.heightmap, sq, maxH, x, y, tr.zBase, layers, base, tonumber(tr.baseSize))
+  local ok, err = terrain.load(tr.heightmap, sq, maxH, x, y, tr.zBase, layers, base, tonumber(tr.baseSize), strict)
   if ok and ter and terrain.swap(tr.ter, sq, maxH, x, y, tr.zBase, layers, base, tonumber(tr.baseSize)) then
     roads.terrainSwapped()
   end
   -- every block import / move drops all the grass on it; rebuild it before this frame is drawn
   groundcover.afterBlockChange()
+  if ok then st.loadedTerrain = tr end
   return ok, err
 end
 
@@ -446,9 +456,17 @@ local function finishRebase()
   local sw = stopwatch.new()
   local msg, tr, xf = rb.msg, rb.terrain, rb.xf
   st.recouple = rebase.recoupleStart(rb.couplings, st.clock)   -- (trailers hitched again: rebase.lua)
-  local ok, err = loadBlock(tr)
+  local previous = st.loadedTerrain
+  local called, ok, err = pcall(loadBlock, tr, rb.purpose == 'roadintel')
+  if not called then err, ok = ok, false end
   if not ok and rb.purpose == 'roadintel' then
-    roadgeom.terrainFailed(err or 'terrain import failed')
+    local restored = false
+    if previous then
+      local restoredCall, restoredValue = pcall(loadBlock, previous)
+      restored = restoredCall and restoredValue == true
+      if restored then restored = pcall(function() be:reloadCollision() end) end
+    end
+    roadgeom.terrainFailed(err or 'terrain import failed', not restored)
     return false
   end
   -- the world shifts under the grass: made fresh (with tools/gcpatch the engine would keep it)

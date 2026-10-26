@@ -1,5 +1,5 @@
 """Optional road intelligence. Legacy imports never load SUMO or PyOsmium."""
-VERSION = 1
+VERSION = 2
 
 
 def availability():

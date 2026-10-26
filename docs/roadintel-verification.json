@@ -1,0 +1,1042 @@
+{
+  "kind": "Offline verification; every in-game result NOT YET VALIDATED",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "python": "3.12.13",
+  "sourceId": "b13814e6b151b871-68",
+  "dependencies": {
+    "SUMO": "1.28.0",
+    "sumolib": "1.28.0",
+    "osmium": "4.3.2",
+    "lua": "Lupa 2.8 / LuaJIT 2.1"
+  },
+  "pythonTests": {
+    "modules": 95,
+    "testsIncludingSkips": 1399,
+    "passed": 1364,
+    "skipped": 35,
+    "interpretation": "Latest successful module logs plus all seven drive cases across reruns; not a single all-green full-suite invocation.",
+    "latestModules": [
+      {
+        "module": "test_airportgrade",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 9.959,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_airportgrade.log",
+        "logSha256": "ba79957a5521e98197a7c7da90aca1acdecff01f2d1fffcd707c6f157596397e",
+        "skipReasons": []
+      },
+      {
+        "module": "test_airports",
+        "tests": 33,
+        "skipped": 0,
+        "seconds": 11.199,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_airports.log",
+        "logSha256": "720f1c69a8f446c4b587cbeef0e34accd0ff8188a5b225e5166cb2eeed14ef93",
+        "skipReasons": []
+      },
+      {
+        "module": "test_approaches",
+        "tests": 13,
+        "skipped": 0,
+        "seconds": 0.134,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_approaches.log",
+        "logSha256": "084e5adf9a3adb7b3bce67b8f06920dbf9fece3b3bcea0157bf7164de1c1fc62",
+        "skipReasons": []
+      },
+      {
+        "module": "test_autodrive_tool",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 0.001,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_autodrive_tool.log",
+        "logSha256": "063b952405c22a9eea53e94662b9fcc650338b324258f9dd5eb1229975f1744c",
+        "skipReasons": []
+      },
+      {
+        "module": "test_bc7",
+        "tests": 5,
+        "skipped": 0,
+        "seconds": 0.153,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_bc7.log",
+        "logSha256": "b1a561455663aa220629474e2991637b59550592a442912cb9bd38646b774271",
+        "skipReasons": []
+      },
+      {
+        "module": "test_benchmark_tool",
+        "tests": 47,
+        "skipped": 1,
+        "seconds": 0.608,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_benchmark_tool.log",
+        "logSha256": "af096666147108326280c491ebc24483c6c54799c480e86211ac16015f397ee0",
+        "skipReasons": [
+          "'luajit not installed'"
+        ]
+      },
+      {
+        "module": "test_blockworker",
+        "tests": 5,
+        "skipped": 0,
+        "seconds": 0.276,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_blockworker.log",
+        "logSha256": "a6e3482d960daba5bc201d3e4d9a98e3d8688640c461dd2c58eb0ede86929581",
+        "skipReasons": []
+      },
+      {
+        "module": "test_bmplaunch",
+        "tests": 16,
+        "skipped": 0,
+        "seconds": 0.062,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_bmplaunch.log",
+        "logSha256": "699166de8f30c7d2de640966883d30a339e95969064da6ca8002f5bb5c6e4808",
+        "skipReasons": []
+      },
+      {
+        "module": "test_bridgetypes",
+        "tests": 20,
+        "skipped": 0,
+        "seconds": 0.108,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_bridgetypes.log",
+        "logSha256": "e0184d551360543a0e9e31adde4545720de14d5462047e86f9cef7a51b7593ec",
+        "skipReasons": []
+      },
+      {
+        "module": "test_budget",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 0.167,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_budget.log",
+        "logSha256": "2ad53750889cc9bde87a43e1f6b922167eea773bd9a26938e7c5072f7187b0c6",
+        "skipReasons": []
+      },
+      {
+        "module": "test_buildings",
+        "tests": 64,
+        "skipped": 0,
+        "seconds": 0.308,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_buildings.log",
+        "logSha256": "a7e36cf72e6df5618fa1292b854aeb5c445e098804ae7c3775cfd7ab878e145d",
+        "skipReasons": []
+      },
+      {
+        "module": "test_cache",
+        "tests": 34,
+        "skipped": 0,
+        "seconds": 4.728,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_cache.log",
+        "logSha256": "9ec7ed55afb29d75eb842308956f156d24140c9e3ce890dbe1e21bf097fba2bc",
+        "skipReasons": []
+      },
+      {
+        "module": "test_cdae",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 0.129,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_cdae.log",
+        "logSha256": "87be7de679186829db2d278856cb595aad404aeda20ad52ea374c55a5981d7ac",
+        "skipReasons": []
+      },
+      {
+        "module": "test_chunkcache",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 0.472,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_chunkcache.log",
+        "logSha256": "9f07665ecf42ca08cb5148f4732e4dba27d5315eb77b63d2a46bddde8cfb911a",
+        "skipReasons": []
+      },
+      {
+        "module": "test_cli_default",
+        "tests": 2,
+        "skipped": 0,
+        "seconds": 0.956,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_cli_default.log",
+        "logSha256": "a0372fc9d7ae6306e7482a9922bb88ef4c311858d515542f9527e22d41d2ed17",
+        "skipReasons": []
+      },
+      {
+        "module": "test_colormatch",
+        "tests": 37,
+        "skipped": 1,
+        "seconds": 150.475,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_colormatch.log",
+        "logSha256": "07d471322f443d28d0a51aa7d56dfdb8c0c4a24ae1d562dd9822697b7b4800d5",
+        "skipReasons": [
+          "'no GPU here (earthfast.gpu_name)'"
+        ]
+      },
+      {
+        "module": "test_cpupin",
+        "tests": 8,
+        "skipped": 1,
+        "seconds": 0.001,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_cpupin.log",
+        "logSha256": "94e13ff09660bf297cfbf3cd1acc97a0e775523bb8587eedb47cf39fcca4dcb9",
+        "skipReasons": [
+          "'Linux'"
+        ]
+      },
+      {
+        "module": "test_credits",
+        "tests": 26,
+        "skipped": 0,
+        "seconds": 107.893,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_credits.log",
+        "logSha256": "8d86df75c62fb4315b916dbdb5da0732da3c71cce0a7c0dea8094ba5268fb4a7",
+        "skipReasons": []
+      },
+      {
+        "module": "test_dem",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 0.125,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_dem.log",
+        "logSha256": "2aaca701cfeb982f1c12c0c8ece39619df4d17e95d9106c9bdce60b6eabc515e",
+        "skipReasons": []
+      },
+      {
+        "module": "test_dem_urgent",
+        "tests": 1,
+        "skipped": 0,
+        "seconds": 0.204,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_dem_urgent.log",
+        "logSha256": "e702db5f3dcbac5bb74bd445ab9ed778c36fafd2ab6b435da4520d889150a348",
+        "skipReasons": []
+      },
+      {
+        "module": "test_demand",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 8.358,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_demand.log",
+        "logSha256": "6ef53e96a6db5e25ebfcd7399238f370bfe0c3854e40d2169c034c87a02d76e3",
+        "skipReasons": []
+      },
+      {
+        "module": "test_deshadow",
+        "tests": 28,
+        "skipped": 1,
+        "seconds": 23.287,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_deshadow.log",
+        "logSha256": "0b28e20e0f0ec14b9011d4732c965e68524403ee99442c6fecf9bf1d5fa85ade",
+        "skipReasons": [
+          "'timing: set DESHADOW_TIMING=1'"
+        ]
+      },
+      {
+        "module": "test_detail",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 15.705,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_detail.log",
+        "logSha256": "be2e0e658fb338a39e1994c04bc222de46edcf6b1bc01486f171599a8ef147a2",
+        "skipReasons": []
+      },
+      {
+        "module": "test_download_ahead",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 0.001,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_download_ahead.log",
+        "logSha256": "7e20e692265588885a5d1a28ffcaca524926420e02982873a1d77461408b1739",
+        "skipReasons": []
+      },
+      {
+        "module": "test_drive_tool",
+        "tests": 14,
+        "skipped": 2,
+        "seconds": 8.234,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_drive_tool.log",
+        "logSha256": "8c4a2919cc2b475ec3ab62cc62f6d20fcda167036616e3024ff706854dd8ef7c",
+        "skipReasons": [
+          "'luajit not installed'"
+        ]
+      },
+      {
+        "module": "test_dsmground",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 0.115,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_dsmground.log",
+        "logSha256": "c33af65f21ff11c79366611d4fcce24f1225025b395e0f6cbace819cd25af464",
+        "skipReasons": []
+      },
+      {
+        "module": "test_e2e",
+        "tests": 2,
+        "skipped": 0,
+        "seconds": 39.495,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_e2e.log",
+        "logSha256": "2ab09721cec16d943105b7054966336f3636b2d25776ea4265beb2c4ecc33861",
+        "skipReasons": []
+      },
+      {
+        "module": "test_european_traffic",
+        "tests": 14,
+        "skipped": 0,
+        "seconds": 0.023,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_european_traffic.log",
+        "logSha256": "d3263d8a165373edb59256b0293cf3cbc4c0a6c1f8604d8d41e6e92ccb3bdc1c",
+        "skipReasons": []
+      },
+      {
+        "module": "test_farfield",
+        "tests": 39,
+        "skipped": 0,
+        "seconds": 1.083,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_farfield.log",
+        "logSha256": "2cc9d86a9d88b8b5d9636d60d1c7824aa93846a8d6114b65ce2c1b1965c9c257",
+        "skipReasons": []
+      },
+      {
+        "module": "test_fast",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 7.489,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_fast.log",
+        "logSha256": "b7be7e9886f421e53afdc36e73b7d08fa11b110367d933627f747ec1e08a5bdb",
+        "skipReasons": []
+      },
+      {
+        "module": "test_furniture",
+        "tests": 19,
+        "skipped": 0,
+        "seconds": 0.029,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_furniture.log",
+        "logSha256": "45e33a83b2b65e9516a2eb07c7c1d54033c13707bb63af404722e69cb4f9b4ca",
+        "skipReasons": []
+      },
+      {
+        "module": "test_geocode",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 0.0,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_geocode.log",
+        "logSha256": "9ec51ba42aa69688829d74a36a1548c65da04a9edbd66285b8378bc3a469eef5",
+        "skipReasons": []
+      },
+      {
+        "module": "test_geodesy",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 0.108,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_geodesy.log",
+        "logSha256": "32cd5d74f69c5f785cd1928d89e6aabe7b2f169c177e7020dcae2b787500be7f",
+        "skipReasons": []
+      },
+      {
+        "module": "test_grading",
+        "tests": 22,
+        "skipped": 0,
+        "seconds": 0.123,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_grading.log",
+        "logSha256": "f751d76b97e01e3d03430bff17e56a0d28d945f0cfa4703876e6f68f88f182b9",
+        "skipReasons": []
+      },
+      {
+        "module": "test_gravity",
+        "tests": 27,
+        "skipped": 4,
+        "seconds": 12.168,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_gravity.log",
+        "logSha256": "476266807bc24c36b8c3b61092383649b80cc2050fc1d6688f3569bacf4bf8ad",
+        "skipReasons": [
+          "'set BNGE_GRAVITY_REAL=1 for the full EGM2008 checks (74 MB download once)'"
+        ]
+      },
+      {
+        "module": "test_groundahead",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 0.001,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_groundahead.log",
+        "logSha256": "0583a41e9f529abf92aeb0a45c0c9acbc4add2a66178fe9a6e913c4ea95d4ac1",
+        "skipReasons": []
+      },
+      {
+        "module": "test_heightmap",
+        "tests": 22,
+        "skipped": 0,
+        "seconds": 2.888,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_heightmap.log",
+        "logSha256": "5b2614f6dc95c287c1adc30050120ce081491f931b08b57e2e74e3811bfe91a8",
+        "skipReasons": []
+      },
+      {
+        "module": "test_horizon",
+        "tests": 18,
+        "skipped": 0,
+        "seconds": 8.581,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_horizon.log",
+        "logSha256": "9d3f1805ac68c7ec04bbf9714c6ebcea8b5c6113f974c46a7341eea9ed922bfe",
+        "skipReasons": []
+      },
+      {
+        "module": "test_imagery",
+        "tests": 41,
+        "skipped": 0,
+        "seconds": 4.307,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_imagery.log",
+        "logSha256": "038f26c4e2a4d42a861cfa2c57e1b92ee9b50e652fd80249059c1c8dd1e57596",
+        "skipReasons": []
+      },
+      {
+        "module": "test_install",
+        "tests": 11,
+        "skipped": 1,
+        "seconds": 0.055,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_install.log",
+        "logSha256": "8b403adbbad6933d0bd093976b56762beba94b1d6de9d912186162c78bdd40f8",
+        "skipReasons": [
+          "'a FIFO'"
+        ]
+      },
+      {
+        "module": "test_islands",
+        "tests": 6,
+        "skipped": 0,
+        "seconds": 0.002,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_islands.log",
+        "logSha256": "8013e36628ba7d380435c129f539077df0030a77f76d45dc64a59882903d0f9a",
+        "skipReasons": []
+      },
+      {
+        "module": "test_launcher_linux",
+        "tests": 24,
+        "skipped": 11,
+        "seconds": 5.272,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_launcher_linux.log",
+        "logSha256": "cd6f466ce40b5b5793263c39dfe05576fa2d9398b21645c8cabd7a8b5075fac4",
+        "skipReasons": [
+          "\"Linux: the launcher's Windows paths (LOCALAPPDATA, USERPROFILE) ignore HOME\"",
+          "'Linux: ensure_ca_certs leaves Windows alone'"
+        ]
+      },
+      {
+        "module": "test_m4_probes_tool",
+        "tests": 9,
+        "skipped": 5,
+        "seconds": 0.037,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_m4_probes_tool.log",
+        "logSha256": "fca1bbd9dd79766f995cdd3ea4c2813d23d0cd5631551be29e52fe31687c2403",
+        "skipReasons": [
+          "'luajit not installed'"
+        ]
+      },
+      {
+        "module": "test_mapdata",
+        "tests": 59,
+        "skipped": 0,
+        "seconds": 13.849,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_mapdata.log",
+        "logSha256": "f687ad6d588235290a900121e4180efae66c8f8508f5857b2b2efff7f669398a",
+        "skipReasons": []
+      },
+      {
+        "module": "test_maptiles",
+        "tests": 21,
+        "skipped": 0,
+        "seconds": 0.921,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_maptiles.log",
+        "logSha256": "259b01ed0fcc5fdaf768cc138eada56996ea43526c16dfd3277a88b6e854f814",
+        "skipReasons": []
+      },
+      {
+        "module": "test_matslots",
+        "tests": 11,
+        "skipped": 0,
+        "seconds": 0.077,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_matslots.log",
+        "logSha256": "b67dffceaa579ef858a75df48d78caf3c525f1f0920e2fcd8759dae7a655ccf5",
+        "skipReasons": []
+      },
+      {
+        "module": "test_mesh",
+        "tests": 28,
+        "skipped": 1,
+        "seconds": 0.806,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_mesh.log",
+        "logSha256": "43e9703407eaa32a172bf381708c46f28982ac81af1ab2ecb24a525b980a1678",
+        "skipReasons": [
+          "'BeamNG.drive not installed'"
+        ]
+      },
+      {
+        "module": "test_modsim",
+        "tests": 3,
+        "skipped": 3,
+        "seconds": 0.0,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_modsim.log",
+        "logSha256": "c97bfa71c6d67544b23427734fbcb9be6c0460614a8ff091c77b263051586d18",
+        "skipReasons": [
+          "'luajit not installed'"
+        ]
+      },
+      {
+        "module": "test_navgraph",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 0.017,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_navgraph.log",
+        "logSha256": "85e164d457d83d115a930012d14fff2297c5f8ab9ca0ebce07930045b1b29a88",
+        "skipReasons": []
+      },
+      {
+        "module": "test_netfetch",
+        "tests": 46,
+        "skipped": 0,
+        "seconds": 1.358,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_netfetch.log",
+        "logSha256": "78edb4084ba2206d3917e3d4074fd36f0710cd95671b5e0176b224fa191f930d",
+        "skipReasons": []
+      },
+      {
+        "module": "test_open_files",
+        "tests": 1,
+        "skipped": 1,
+        "seconds": 0.001,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_open_files.log",
+        "logSha256": "dc9abe0fb22aa5fdf8b07fb878f3a388411c64d322034b59c408f83bf064e263",
+        "skipReasons": [
+          "'no resource module (Windows)'"
+        ]
+      },
+      {
+        "module": "test_osmtags",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 0.078,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_osmtags.log",
+        "logSha256": "b21430ff41d31a51e48f7c9a36c30f6ce480a476a8f5160d0793abe1cca02c22",
+        "skipReasons": []
+      },
+      {
+        "module": "test_outer_centres",
+        "tests": 2,
+        "skipped": 0,
+        "seconds": 0.03,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_outer_centres.log",
+        "logSha256": "e44f2c8c11678ff9fd68a5b5a03f1571fb1e23067c1ee0932d9a8157669c7056",
+        "skipReasons": []
+      },
+      {
+        "module": "test_pacer",
+        "tests": 2,
+        "skipped": 0,
+        "seconds": 0.402,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_pacer.log",
+        "logSha256": "ce35b9143e5687e34c96e9da4e47cb3b3f65a1b66aa31a32393f13cfc87dd7db",
+        "skipReasons": []
+      },
+      {
+        "module": "test_parking",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 0.065,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_parking.log",
+        "logSha256": "392cee8e41ee7ef92e042cd1978b12dad9e1151ef9c5d7a1196ce26252950f2c",
+        "skipReasons": []
+      },
+      {
+        "module": "test_peerwork",
+        "tests": 20,
+        "skipped": 0,
+        "seconds": 3.084,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_peerwork.log",
+        "logSha256": "bdfd0e48dd1eecaf0581b430339e119671c11e473550401d8c5182ce98f73034",
+        "skipReasons": []
+      },
+      {
+        "module": "test_plancache",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 0.358,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_plancache.log",
+        "logSha256": "c72e6d20dc258d1406a8dad7199ab3d91469fadfa2a1c02e3d145c5e77d80378",
+        "skipReasons": []
+      },
+      {
+        "module": "test_plazas",
+        "tests": 6,
+        "skipped": 0,
+        "seconds": 0.022,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_plazas.log",
+        "logSha256": "aff15d1ad35e8b9a98eb212fd68f1d0ab0f3eaae37c28911c9b398d4de18fae9",
+        "skipReasons": []
+      },
+      {
+        "module": "test_polardem",
+        "tests": 6,
+        "skipped": 0,
+        "seconds": 0.131,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_polardem.log",
+        "logSha256": "e824512c04bdc0ef432c0207491d73c5b106da8b137a783d898b58f3c3965226",
+        "skipReasons": []
+      },
+      {
+        "module": "test_polygon",
+        "tests": 2,
+        "skipped": 0,
+        "seconds": 0.587,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_polygon.log",
+        "logSha256": "6eb3ed1a12c50a6b5a49caacc174d9a25ffc293a0229246687f63a601cd30f81",
+        "skipReasons": []
+      },
+      {
+        "module": "test_pools",
+        "tests": 2,
+        "skipped": 0,
+        "seconds": 0.298,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_pools.log",
+        "logSha256": "be59797a9eaa09af2facb05fff8e86b5c424ed4f549d6de5c8563602cc0ab071",
+        "skipReasons": []
+      },
+      {
+        "module": "test_prewarm",
+        "tests": 2,
+        "skipped": 0,
+        "seconds": 0.041,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_prewarm.log",
+        "logSha256": "b7e42692fcf0eca3d94f2216216c38db34aa617ffdf3534929457303d187f7be",
+        "skipReasons": []
+      },
+      {
+        "module": "test_protocol",
+        "tests": 5,
+        "skipped": 0,
+        "seconds": 0.002,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_protocol.log",
+        "logSha256": "e20859bda44d750292a3be49a832c8b7407df243d698db9c1b466aaf7ebf018f",
+        "skipReasons": []
+      },
+      {
+        "module": "test_protocol_agreement",
+        "tests": 32,
+        "skipped": 1,
+        "seconds": 83.778,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_protocol_agreement.log",
+        "logSha256": "a89cf4f1ecd583e115b39d5464ad03426e422d76b871255b367e59a5dbf10e6b",
+        "skipReasons": [
+          "'luajit not installed'"
+        ]
+      },
+      {
+        "module": "test_randomplace",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 0.039,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_randomplace.log",
+        "logSha256": "625d2664a5d96ff00141a4d632c36a1263445abe1303f02752013e6445a3193e",
+        "skipReasons": []
+      },
+      {
+        "module": "test_reports_tool",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 0.042,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_reports_tool.log",
+        "logSha256": "6f2bfc6dcced07c7734709b2fe633f138e69d0c04784db20211f3465a4b7cc6b",
+        "skipReasons": []
+      },
+      {
+        "module": "test_restart",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 105.835,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_restart.log",
+        "logSha256": "8f5040819eeb396261a2bf20825d4df4406197f17403dedf1416345a458e8eff",
+        "skipReasons": []
+      },
+      {
+        "module": "test_retex",
+        "tests": 20,
+        "skipped": 0,
+        "seconds": 18.116,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_retex.log",
+        "logSha256": "59d6b6a4a315e9f3f00aff6741c57c5017e87e09070137a90869ce1c46985ed9",
+        "skipReasons": []
+      },
+      {
+        "module": "test_riverlines",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 0.014,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_riverlines.log",
+        "logSha256": "3dbc11cf5682f776cb05ee7f307c045047b4d77b28bf1e18bebde87878b76da8",
+        "skipReasons": []
+      },
+      {
+        "module": "test_roadgeom_ext",
+        "tests": 25,
+        "skipped": 0,
+        "seconds": 1.611,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_roadgeom_ext.log",
+        "logSha256": "6651be827572100c8d2a09d9c7a04a5ca1545dd194210dd963730a11fb9932bb",
+        "skipReasons": []
+      },
+      {
+        "module": "test_roadgeom_install",
+        "tests": 6,
+        "skipped": 0,
+        "seconds": 0.125,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_roadgeom_install.log",
+        "logSha256": "516fb1c1477aeaebfcbf4e127fb161de3c5451b1cf347192cf6bba021f632eec",
+        "skipReasons": []
+      },
+      {
+        "module": "test_roadintel",
+        "tests": 26,
+        "skipped": 0,
+        "seconds": 6.184,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_roadintel.log",
+        "logSha256": "3618fd937c47af53a9dc3f4b7e85d5c36e2006caeb17100840278ba5dc62c8ed",
+        "skipReasons": []
+      },
+      {
+        "module": "test_roadmesh",
+        "tests": 23,
+        "skipped": 0,
+        "seconds": 0.178,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_roadmesh.log",
+        "logSha256": "ff53fbe2b5346447e2300f1e79aa09246a8aab35664fa6aa24db8b69d7901396",
+        "skipReasons": []
+      },
+      {
+        "module": "test_roads",
+        "tests": 60,
+        "skipped": 0,
+        "seconds": 9.526,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_roads.log",
+        "logSha256": "9b86489b5226d909fb5387d9b9ab2805817a3cae2a080b71308188ea6dfa4142",
+        "skipReasons": []
+      },
+      {
+        "module": "test_roadwidth",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 0.123,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_roadwidth.log",
+        "logSha256": "1343ee0e5f0d623e92b2c699243620b18c58f55d99fef74773ca9b90c5bae6cf",
+        "skipReasons": []
+      },
+      {
+        "module": "test_rockface",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 0.12,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_rockface.log",
+        "logSha256": "c7a2504a6f23ef4fcd6762048763129a570ef431bccb1828acd93e2575c873bf",
+        "skipReasons": []
+      },
+      {
+        "module": "test_routing",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 0.0,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_routing.log",
+        "logSha256": "36519093310c22c0c15e16ef61cfd0a3680b1584da188f1576139f75c8a78177",
+        "skipReasons": []
+      },
+      {
+        "module": "test_runwaygeom",
+        "tests": 16,
+        "skipped": 0,
+        "seconds": 2.064,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_runwaygeom.log",
+        "logSha256": "9e0080a9d426414ff6fb1fb3ddcb3f8897c761cfae714924a65a51e1a1b53cd7",
+        "skipReasons": []
+      },
+      {
+        "module": "test_runwaymarks",
+        "tests": 11,
+        "skipped": 0,
+        "seconds": 0.407,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_runwaymarks.log",
+        "logSha256": "bf56eaaf96877e3b693114c30b441eb078f187620b7706e3ecdb4c70468c82f6",
+        "skipReasons": []
+      },
+      {
+        "module": "test_seacarve",
+        "tests": 28,
+        "skipped": 0,
+        "seconds": 4.903,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_seacarve.log",
+        "logSha256": "dc0f51d37a7d4a091a2a53ded3256dd9616ed5a0c5bb84ca009a829200bd470b",
+        "skipReasons": []
+      },
+      {
+        "module": "test_season",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 0.02,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_season.log",
+        "logSha256": "048ebac4aa5fc43b4cf626d358aecbac5d1c27a6f381cc1006af247c6eadb9b7",
+        "skipReasons": []
+      },
+      {
+        "module": "test_seatiles",
+        "tests": 5,
+        "skipped": 0,
+        "seconds": 0.171,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_seatiles.log",
+        "logSha256": "855e5d6a281e50b7ed5df900f89562a65de67cbcaaeaf12ec2cbc74e196dab84",
+        "skipReasons": []
+      },
+      {
+        "module": "test_selfupdate",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 0.039,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_selfupdate.log",
+        "logSha256": "82e9e0cf3059c3f25b9170cad62f83ba391d1f01e9ecdd54fcb89c87c5c1bbc3",
+        "skipReasons": []
+      },
+      {
+        "module": "test_server",
+        "tests": 45,
+        "skipped": 0,
+        "seconds": 341.555,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_server.log",
+        "logSha256": "2002c1034ddbdb70a8cf53e6fefe6b408f36c0f9446ea2045ad5638dce89d9ba",
+        "skipReasons": []
+      },
+      {
+        "module": "test_sidewalk_collision",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 0.095,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_sidewalk_collision.log",
+        "logSha256": "6119ffb1415307b829b58767e0e70f8f2df0cb41e7d1972f50ec357345d7180e",
+        "skipReasons": []
+      },
+      {
+        "module": "test_sse_lod",
+        "tests": 6,
+        "skipped": 0,
+        "seconds": 0.02,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_sse_lod.log",
+        "logSha256": "3bb4a8ca9ce21d77fcbe44ac0be5807975e71d83466c035c18476f53ff7a4373",
+        "skipReasons": []
+      },
+      {
+        "module": "test_staging",
+        "tests": 6,
+        "skipped": 0,
+        "seconds": 0.052,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_staging.log",
+        "logSha256": "2f51012ed777905db0000c4fa9b4617d41bcfed83086367c88a8c44782ee6643",
+        "skipReasons": []
+      },
+      {
+        "module": "test_surface",
+        "tests": 25,
+        "skipped": 0,
+        "seconds": 0.641,
+        "outcome": "OK",
+        "log": "build/test-logs-group4-final/test_surface.log",
+        "logSha256": "8aa8258f36087e0ae8e8dfec54f696d240635ef886a3832915467a24b17f61db",
+        "skipReasons": []
+      },
+      {
+        "module": "test_terrainpatch",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 0.014,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_terrainpatch.log",
+        "logSha256": "85dfe8d126fb2611e973b768077917baa6d92f5a90af34daa393f35703bb3f74",
+        "skipReasons": []
+      },
+      {
+        "module": "test_tunnels",
+        "tests": 27,
+        "skipped": 0,
+        "seconds": 0.084,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_tunnels.log",
+        "logSha256": "f5cbc03c78b66b34c88c9d3108bf3ddc245d096b14df583a414960a00dfb92d1",
+        "skipReasons": []
+      },
+      {
+        "module": "test_updates",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 0.031,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_updates.log",
+        "logSha256": "25d29d5da7693bdc0bf4b2440955dcd035eae8f2b178ddb003e8bf81ea97a5f2",
+        "skipReasons": []
+      },
+      {
+        "module": "test_v131_default",
+        "tests": 2,
+        "skipped": 0,
+        "seconds": 0.41,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_v131_default.log",
+        "logSha256": "b96f71b02d6ad91f74bb5c1f4b4784e936202e6581b8ffb74ea6b47fea92037b",
+        "skipReasons": []
+      },
+      {
+        "module": "test_vegetation",
+        "tests": 12,
+        "skipped": 0,
+        "seconds": 1.41,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_vegetation.log",
+        "logSha256": "b5a91fb8fd7c393afb24ed57766ecdb9ada7b38a1781845f69d89fdf767b91e5",
+        "skipReasons": []
+      },
+      {
+        "module": "test_weather",
+        "tests": 22,
+        "skipped": 2,
+        "seconds": 1.937,
+        "outcome": "OK",
+        "log": "build/test-logs-group4/test_weather.log",
+        "logSha256": "e3c6ff2998b03dc688ff85c4747e57d7e5353a51e95a858a3a7a1de6abf718cb",
+        "skipReasons": [
+          "'luajit not installed'"
+        ]
+      }
+    ],
+    "simulatedDrive": {
+      "environment": {
+        "BNGE_DRIVE_REBASE_M": "2000",
+        "BNGE_DRIVE_SPEEDUP": "1"
+      },
+      "cases": {
+        "test_integration_drive.FollowDrive512Test.test_134_no_late_terrain": {
+          "outcome": "ok",
+          "log": "build/test-logs-group4-rerun/test_integration_drive.log"
+        },
+        "test_integration_drive.FollowDrive512Test.test_200_fast_mode_slow_heightmaps": {
+          "outcome": "ok",
+          "log": "build/test-logs-group4-rerun/test_integration_drive.log"
+        },
+        "test_integration_drive.FollowDrive512Test.test_250_slow_anchor_rebases": {
+          "outcome": "ok",
+          "log": "build/test-logs-group4-rerun/test_integration_drive.log"
+        },
+        "test_integration_drive.MeshDrive64Block512Test.test_drive_and_rebase": {
+          "outcome": "ok",
+          "log": "build/roadintel-drive-final.log"
+        },
+        "test_integration_drive.MeshDrive64Test.test_drive_and_rebase": {
+          "outcome": "ok",
+          "log": "build/test-logs-group4-rerun/test_integration_drive.log"
+        },
+        "test_integration_drive.MeshDriveTest.test_drive_and_rebase": {
+          "outcome": "ok",
+          "log": "build/test-logs-group4-rerun/test_integration_drive.log"
+        },
+        "test_integration_drive.TerrainDriveTest.test_drive_and_rebase": {
+          "outcome": "ok",
+          "log": "build/roadintel-drive-final.log"
+        }
+      },
+      "scope": "Four terrain/mesh configurations drove about 2.6 km each with one rebase; three accelerated follow scenarios include 134/200/250 m/s and delayed terrain/anchors. Simulated client only."
+    }
+  },
+  "luaTests": {
+    "suites": 61,
+    "passedAssertions": 5309,
+    "failedAssertions": 0,
+    "log": "build/roadintel-lua-final.log",
+    "logSha256": "95b38f551b9e418768543d6e1928d146be81507557092ca26b3d5ff9daafbe8a"
+  },
+  "qualifications": [
+    "The initial 95-module run passed 92 modules, found two existing stale/Windows fixtures, and reached the 1500-second timeout in the default 15-km drive module. That long default route was not completed.",
+    "The CLI golden and mocked container-path fixtures were corrected and passed. A starting-commit baseline reproduced the Windows prune-audit failure. Drive checks now normalize paths, stop follow-event attribution at a rebase coordinate-frame change, and wait for test-server descendant log handles during Windows teardown.",
+    "After the final production changes, all 12 affected Python modules passed (227 tests), all 61 Lua suites passed, and the two remaining drive cases passed. The other successful module/drive logs are retained from the broader runs.",
+    "35 Python skips cover Linux-only checks, unavailable game/GPU/resource/FIFO tools, standalone LuaJIT discovery, and optional gravity-download/timing opt-ins. Lua was also tested separately through Lupa. No skip is represented as a passed assertion.",
+    "Benchmarks are synthetic offline measurements over nine fixtures and all four backend combinations, seven repeats, real netconvert, and fresh terrain builds. No real-world screenshots, AI behavior, game frame times, Linux smoke run, or frozen-SUMO packaging validation is claimed.",
+    "Neither BeamNG.drive nor the SUMO simulator was launched or controlled. Legacy defaults and original/Group 1 requirement files are unchanged."
+  ]
+}

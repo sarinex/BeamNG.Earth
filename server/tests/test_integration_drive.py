@@ -447,7 +447,9 @@ class DriveBase(unittest.TestCase):
         self.tmp.cleanup()
 
     def fs(self, vfs):
-        return os.path.join(self.user, vfs.lstrip("/"))
+        # Match os.listdir/join paths on Windows too: mixed slash spellings made
+        # every historically-loaded file look unobserved by the prune audit.
+        return os.path.normpath(os.path.join(self.user, vfs.lstrip("/")))
 
     def run_drive(self):
         self.assertTrue(REBASE["MIN_DISTANCE"] <= REBASE_M <= REBASE["MAX_DISTANCE"])
@@ -1059,7 +1061,12 @@ class DriveBase(unittest.TestCase):
             near = [events[i] for i in np.nonzero((ev_t >= tc - WINDOW_S / 2) & (ev_t <= tc + WINDOW_S / 2))[0]]
             cm["around"] = sum(len(e[2]) for e in near)
             vac = subtract(lay.block_at(*cm["old"]).bbox, lay.block_at(*cm["new"]).bbox)
-            after = [events[i] for i in np.nonzero((ev_t > tc) & (ev_t <= tc + WINDOW_S))[0]]
+            # A rebase changes coordinate frames and legitimately retires the old
+            # anchor. Do not attribute that work to a nearby terrain-follow
+            # commit (especially with the short offline rebase distance).
+            end = min([tc + WINDOW_S] + [c["sim"] for c in commits
+                      if c["kind"] == "rebase" and c["sim"] > tc])
+            after = [events[i] for i in np.nonzero((ev_t > tc) & (ev_t < end))[0]]
             cm["caused"] = [(round(e[0] - tc, 2), e[1], k) for e in after for k in e[2]
                             if any(ff.overlaps(tile_bbox(k), v) for v in vac)]
 

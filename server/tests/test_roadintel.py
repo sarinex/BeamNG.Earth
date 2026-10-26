@@ -28,6 +28,31 @@ def spec(width=10):
 
 
 class Layout(unittest.TestCase):
+    def test_runtime_matching_uses_region_indexes(self):
+        from roadintel_ext.runtime import native_edges, native_connections
+        from roadintel_ext.navigation import endpoint
+        class NoScan(dict):
+            def items(self): raise AssertionError("whole regional network scanned per feature")
+            def __iter__(self): raise AssertionError("whole regional network scanned per junction")
+        edge = {"way": "10", "shape": [[0., 0.], [.001, 0.]], "from": "a", "to": "b"}
+        connection = {"from": "10", "to": "11"}
+        data = {"edges": NoScan(), "connections": NoScan(), "_edges_by_way": {"10": {"10": edge}},
+                "_connections_by_from": {"10": [connection]}}
+        record = {"way": "10", "region": data}
+        self.assertEqual(native_edges(record), {"10": edge})
+        self.assertEqual(native_connections(data, ["10"]), [connection])
+        self.assertEqual(endpoint(record, (.001, 0.), True, (.0005, 0.))[0], "10")
+    def test_offset_driving_centre_retains_authoritative_bridge_elevation(self):
+        f = features([[(20, 100), (220, 100)]], ["primary"], levels=[(0, 1)])
+        f._roadintel = [{"tags": {"oneway": "yes", "lanes": "2", "width": "11.6",
+                                  "parking:right": "lane", "parking:right:width": "5"},
+                        "reverse": False, "region": {"leftHand": False, "edges": {}}, "provenance": "fixture"}]
+        ll = f.parts(0)[0][0]
+        x, y, _ = FRAME.geodetic_to_enu(ll[:, 1], ll[:, 0], 0)
+        decks = {str(f.ids[0]): [(np.c_[x, y], np.full(len(x), 20.))]}
+        g = navgraph.build(FRAME, [f], lambda la, lo: np.zeros(np.shape(la)), (120, 100), decks=decks)
+        self.assertTrue(g["nodes"])
+        self.assertTrue(all(n[2] == 20 for n in g["nodes"].values()))
     def test_mapped_directional_complement_and_width_conflicts(self):
         s = normalize({"lanes": "5", "lanes:forward": "2", "width": "16"}, spec())
         self.assertEqual((s.forward, s.backward), (2, 3))
@@ -189,6 +214,21 @@ class Installation(unittest.TestCase):
 
 
 class NativeNetworkContracts(unittest.TestCase):
+    def test_canonical_unknown_width_and_mapped_speed_reach_all_consumers(self):
+        with tempfile.TemporaryDirectory() as work:
+            source, cache = Path(work) / "fixture.osm.xml", Path(work) / "cache"
+            f = network(source)
+            f.attrs["class"] = np.array(["secondary"] * len(f))
+            source.write_text(source.read_text().replace('<tag k="width" v="9.9" />', '<tag k="maxspeed" v="25 mph" />'))
+            preprocess(source, cache, 39.2834, -76.5934)
+            urban = lambda la, lo: np.ones(np.shape(la), bool)
+            view = MapView(SimpleNamespace(cell=lambda *a, **kw: SimpleNamespace(layers={"roads": f})), Dataset(cache), urban_fn=urban)
+            clone = view.cell(None).layers["roads"]
+            a, b = roads.road_specs(clone)[0], roads.road_specs(clone, urban)[0]
+            self.assertEqual((a.width, a.walk, a.urban), (b.width, b.walk, b.urban))
+            self.assertTrue(a.urban)
+            self.assertGreaterEqual(a.width, roads.road_specs(f, urban)[0].width)
+            self.assertAlmostEqual(navgraph.road_mph(clone, 0, a), 25)
     def test_cache_update_pins_old_snapshot_and_corruption_falls_back(self):
         with tempfile.TemporaryDirectory() as work:
             source, cache = Path(work) / "fixture.osm.xml", Path(work) / "cache"
@@ -265,7 +305,9 @@ class NativeNetworkContracts(unittest.TestCase):
             self.assertNotIn("c2", graph["nodes"])
             self.assertTrue(all(e[2] == 1 for e in graph["edges"] if any(n.startswith("ri") for n in e[:2])))
             self.assertEqual(graph, navgraph.build(FRAME, [f, f], flat, (120, 120)))
-            city = navgraph.build(FRAME, [f], flat, (120, 120), urban_fn=lambda la, lo: np.ones(np.shape(la), bool))
+            urban = lambda la, lo: np.ones(np.shape(la), bool)
+            city_feats = MapView(base, dataset, urban_fn=urban).cell(None).layers["roads"]
+            city = navgraph.build(FRAME, [city_feats], flat, (120, 120), urban_fn=urban)
             self.assertTrue(city["signals"], "urban fixture exercises existing stop/signal controllers")
             self.assertIn("c2", city["roadIntelligence"]["sumoJunctions"])
             for signal in city["signals"]:
@@ -312,6 +354,19 @@ class NativeNetworkContracts(unittest.TestCase):
 
 
 class CoordinatedTerrain(unittest.TestCase):
+    def test_selection_requires_terrain_surface_support(self):
+        from roadgeom_ext.streaming import Selection
+        for server in (None, SimpleNamespace(mapdata=object(), surface=None),
+                       SimpleNamespace(mapdata=None, surface=object())):
+            selected = Selection(server)
+            sent = []
+            conn = SimpleNamespace(roads=selected.tracker(), send=sent.append)
+            selected.select(conn, {"version": 1, "backend": "legacy", "intelligence": "sumo", "speed": 0})
+            self.assertFalse(sent[-1]["ok"])
+            self.assertIn("surfaces enabled", sent[-1]["error"])
+            self.assertEqual(selected.intelligence, "legacy")
+            self.assertEqual(selected.epoch, 0)
+
     def test_server_rejects_old_legacy_anchor_during_rollback(self):
         from earthd import Connection
         selection = SimpleNamespace(awaiting_anchor=True, dataset=None, epoch=4)

@@ -842,13 +842,53 @@ do
   T.check(prepared.lat==origin.lat and prepared.lon==origin.lon, 'intelligence terrain keeps the exact geographic origin')
   serverSend({type='anchor_ready',requestId=prepared.requestId,anchorId=901,lat=prepared.lat,lon=prepared.lon,
     roadEpoch=1,groundZ=0,terrain={cx=prepared.cx,cy=prepared.cy,
-      heightmap='/temp/beamngEarth/s12/hm_intelligence.png',size=lattice.N,squareSize=SQ,zBase=1120,maxHeight=1024,q=1/64}})
+      heightmap='/temp/beamngEarth/s12/hm_intelligence.png',size=lattice.N,squareSize=SQ,zBase=1120,maxHeight=1024,q=1/64,
+      layers={'/temp/beamngEarth/s12/hm_intelligence_m0.png'},materials={{'beamngEarthDirt','DIRT'}}}})
   frame(true)
   T.check(calls.importMaps==before+1 and last('commit_anchor').anchorId==901,
     'intelligence commits new terrain and collision while paused')
   T.check(veh.pos.x==pos.x and veh.pos.y==pos.y and veh.pos.z==pos.z, 'identity intelligence rebuild does not move the vehicle')
   T.check(selection.intelligenceStatus().terrainReady and not selection.intelligenceStatus().active,
     'terrain completion still waits for road and graph settlement')
+
+  -- A failed mask preflight restores the previous imported terrain. If even
+  -- restoration fails, the operation must retain its owned simulation hold.
+  local terrain = require('beamngEarth/terrain')
+  local function failedRebuild(aid, failRestore)
+    selection.hello({version=1,active='legacy',intelligence='sumo',epoch=1,requestIds=true,
+      coordinatedTerrain=true,navEpochs=true,navRequired=false}, 'legacy', 'legacy')
+    selection.update(1.1,{connected=true,speed=0,safe=true,multiplayer=false,
+      roads={setHold=function() end},paused=function() return false end,pause=function() end,
+      settled=function() return false end,send=function(msg) request=msg end})
+    serverSend({type='road_geometry_state',ok=true,backend='legacy',intelligence='legacy',epoch=aid,
+      requestId=request.requestId,terrainRebuild=true})
+    frame(true)
+    local p=last('prepare_anchor')
+    local realExists, realLoad, realCollision = FS.fileExists, terrain.load, be.reloadCollision
+    FS.fileExists=function(self,path) if path=='/missing_intelligence_mask.png' then return false end return realExists(self,path) end
+    if failRestore == 'collision' then be.reloadCollision=function() error('simulated collision restoration failure') end
+    elseif failRestore then terrain.load=function() return false, 'simulated restore failure' end end
+    serverSend({type='anchor_ready',requestId=p.requestId,anchorId=aid,lat=p.lat,lon=p.lon,
+      roadEpoch=aid,groundZ=0,terrain={cx=p.cx,cy=p.cy,heightmap='/temp/new.png',size=lattice.N,
+        squareSize=SQ,zBase=1120,maxHeight=1024,q=1/64,
+        layers={'/missing_intelligence_mask.png'},materials={{'beamngEarthDirt','DIRT'}}}})
+    frame(true)
+    FS.fileExists, terrain.load, be.reloadCollision = realExists, realLoad, realCollision
+    frame(true) -- state machine observes the import failure on its next update
+    T.check(core._state().anchorId==901 and last('commit_anchor').anchorId==901,
+      'failed rebuild never commits the new anchor')
+    return selection.intelligenceStatus()
+  end
+  local previous=core._state().loadedTerrain
+  local failed=failedRebuild(902,false)
+  T.check(failed.incomplete and not failed.terrainBlocked and core._state().loadedTerrain==previous,
+    'invalid masks restore the previous terrain and report incomplete')
+  local blocked=failedRebuild(903,true)
+  T.check(blocked.incomplete and blocked.terrainBlocked,
+    'failed restoration is reported so the hold cannot be released')
+  local collisionBlocked=failedRebuild(904,'collision')
+  T.check(collisionBlocked.incomplete and collisionBlocked.terrainBlocked,
+    'collision restoration failure retains the simulation hold too')
 end
 
 core.onExtensionUnloaded()

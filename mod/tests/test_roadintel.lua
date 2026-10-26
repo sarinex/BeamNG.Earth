@@ -47,6 +47,21 @@ request=sent[#sent]
 m.state({ok=true,backend='legacy',intelligence='legacy',epoch=6,requestId=request.requestId,terrainRebuild=true},function() end)
 m.terrainFailed('fixture import failure'); m.update(.1,ctx)
 T.check(not paused and m.status().incomplete and m.intelligenceStatus().text:find('fixture import failure'), 'failed import remains visibly incomplete')
+m.requestIntelligence('legacy'); m.update(1.1,ctx); request=sent[#sent]
+m.update(.1,ctx)
+T.check(m.status().phase=='request' and paused, 'retry waits for its acknowledgement without replaying the previous terrain error')
+m.state({ok=true,backend='legacy',intelligence='legacy',epoch=7,requestId=request.requestId,terrainRebuild=true},function() end)
+m.terrainFailed('fixture restoration failure',true); m.update(.1,ctx)
+T.check(paused and held and m.intelligenceStatus().terrainBlocked, 'failed terrain restoration preserves the simulation hold')
+ctx.safe=false
+m.requestIntelligence('legacy'); m.update(1.1,ctx); request=sent[#sent]
+T.check(request.rebuildTerrain, 'rollback can restore missing terrain while already held')
+m.update(.1,ctx)
+T.check(m.status().phase=='request' and paused, 'blocked restoration can wait for the recovery acknowledgement')
+m.state({ok=true,backend='legacy',intelligence='legacy',epoch=8,requestId=request.requestId,terrainRebuild=true},function() end)
+m.terrainLoaded(); m.navigation({roadEpoch=8,roadBackend='legacy'})
+m.progress({roads={5,5},roadGeometry={epoch=8,failed=0}}); m.update(.1,ctx)
+T.check(not paused and not held and not m.intelligenceStatus().terrainBlocked, 'successful terrain restoration releases only the owned hold')
 m.hello(nil,'legacy','sumo')
 T.check(not m.requestIntelligence('sumo') and m.intelligenceStatus().active=='legacy', 'old servers retain Legacy')
 T.done('test_roadintel')

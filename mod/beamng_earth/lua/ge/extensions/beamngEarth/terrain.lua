@@ -267,8 +267,9 @@ end
 -- The caller rebuilds collision (be:reloadCollision) once all world edits of the frame are done.
 -- layers (optional, server --surface on): { masks = { path, ... }, materials = { { name, gm }, ... } }
 -- base / baseSize (optional, detail mode): the block's aerial photo (setBase)
-function M.load(path, squareSize, maxHeight, x, y, z, layers, base, baseSize)
+function M.load(path, squareSize, maxHeight, x, y, z, layers, base, baseSize, strict)
   if not FS:fileExists(path) then return false, 'heightmap not found: ' .. tostring(path) end
+  if strict and not layers then return false, 'road intelligence surface layers are missing' end
   M.square = tonumber(squareSize) or M.square
   local tb = getOrCreate()
   if layers then
@@ -278,12 +279,14 @@ function M.load(path, squareSize, maxHeight, x, y, z, layers, base, baseSize)
       for _, m in ipairs(layers.masks) do if not FS:fileExists(m) then okL = false; break end end
     end
     if not okL then
+      if strict then return false, 'road intelligence surface layers are unusable' end
       log('W', 'beamngEarth', 'surface layers unusable, importing the single dirt layer')
       layers = nil
     end
   end
   local ok, err = importMaps(tb, path, squareSize, maxHeight, true, layers)
   if not ok then
+    if strict then return false, err end
     -- Ground without a material still collides; it just renders as the placeholder.
     log('W', 'beamngEarth', 'importMaps with material failed (' .. tostring(err) .. '), retrying without')
     ok, err = importMaps(tb, path, squareSize, maxHeight, false)
